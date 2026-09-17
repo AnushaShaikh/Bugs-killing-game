@@ -1,5 +1,11 @@
 import React, { useState, useEffect, useRef } from "react";
-import { MultiplayerPlayer, MultiplayerRoom, WeaponType, OpenRoomSummary } from "../types";
+import {
+  DifficultyLevel,
+  MultiplayerPlayer,
+  MultiplayerRoom,
+  WeaponType,
+  OpenRoomSummary,
+} from "../types";
 import { WEAPONS } from "../data/weapons";
 import {
   Users,
@@ -203,6 +209,17 @@ export const MultiplayerLobby: React.FC<MultiplayerLobbyProps> = ({
         })
       );
     }
+  };
+
+  const handleChangeDifficulty = (difficulty: DifficultyLevel) => {
+    if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN || !activeRoom) return;
+    wsRef.current.send(
+      JSON.stringify({
+        type: "update_difficulty",
+        roomId: activeRoom.roomId,
+        difficulty,
+      })
+    );
   };
 
   const copyRoomCode = async () => {
@@ -485,8 +502,12 @@ export const MultiplayerLobby: React.FC<MultiplayerLobbyProps> = ({
                                 <span className="tracking-wider font-mono text-indigo-300">{room.id}</span>
                                 <span className="text-slate-400 font-normal">by {room.hostName}</span>
                               </div>
-                              <div className="text-[10px] text-slate-400">
-                                {room.playerCount} / {room.maxPlayers} players • Weapon: {weaponInfo.name}
+                              <div className="text-[10px] text-slate-400 flex items-center gap-1.5 mt-0.5">
+                                <span>{room.playerCount} / {room.maxPlayers} players</span>
+                                <span>•</span>
+                                <span>{weaponInfo.name}</span>
+                                <span>•</span>
+                                <span className="font-bold text-amber-300 capitalize">{room.difficulty || "easy"}</span>
                               </div>
                             </div>
                           </div>
@@ -616,6 +637,123 @@ export const MultiplayerLobby: React.FC<MultiplayerLobbyProps> = ({
                     </div>
                   </div>
                   <span className="text-[10px] font-bold text-amber-300 bg-amber-500/10 px-2.5 py-1 rounded-full border border-amber-500/30">
+                    Host Decides
+                  </span>
+                </div>
+              )}
+
+              {/* Room Difficulty Section: Host controls it ("the host decides the level") */}
+              {isCurrentPlayerHost ? (
+                <div className="p-3.5 bg-slate-800/90 border-2 border-indigo-500/50 rounded-2xl space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1.5">
+                      <Crown className="w-4 h-4 text-amber-400" />
+                      <span className="text-[11px] uppercase font-black text-indigo-300 tracking-wider">
+                        Room Difficulty (Host Decides)
+                      </span>
+                    </div>
+                    <span className="text-[10px] text-indigo-200/90 font-bold bg-indigo-500/20 px-2 py-0.5 rounded-full border border-indigo-500/30">
+                      Applied to all players
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2">
+                    {/* EASY */}
+                    <button
+                      type="button"
+                      id="lobby-difficulty-easy"
+                      onClick={() => handleChangeDifficulty("easy")}
+                      className={`p-2 rounded-xl border text-left transition-all cursor-pointer ${
+                        (activeRoom.difficulty || "easy") === "easy"
+                          ? "bg-emerald-500/25 border-emerald-400 text-white shadow-sm ring-1 ring-emerald-400"
+                          : "bg-slate-950 border-slate-800 text-slate-400 hover:text-white"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-black text-emerald-400 flex items-center gap-1">
+                          <span>🟢</span> Easy
+                        </span>
+                        {(activeRoom.difficulty || "easy") === "easy" && (
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                        )}
+                      </div>
+                      <div className="text-[10px] text-slate-300 font-semibold mt-0.5">1.0x Speed</div>
+                      <div className="text-[9px] text-slate-400">Current game rules</div>
+                    </button>
+
+                    {/* HARD */}
+                    <button
+                      type="button"
+                      id="lobby-difficulty-hard"
+                      onClick={() => handleChangeDifficulty("hard")}
+                      className={`p-2 rounded-xl border text-left transition-all cursor-pointer ${
+                        activeRoom.difficulty === "hard"
+                          ? "bg-amber-500/25 border-amber-400 text-white shadow-sm ring-1 ring-amber-400"
+                          : "bg-slate-950 border-slate-800 text-slate-400 hover:text-white"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-black text-amber-400 flex items-center gap-1">
+                          <span>⚡</span> Hard
+                        </span>
+                        {activeRoom.difficulty === "hard" && (
+                          <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+                        )}
+                      </div>
+                      <div className="text-[10px] text-slate-300 font-semibold mt-0.5">+0.75 Speed</div>
+                      <div className="text-[9px] text-amber-300/80">🦋 Save Butterflies</div>
+                    </button>
+
+                    {/* EXPERT */}
+                    <button
+                      type="button"
+                      id="lobby-difficulty-expert"
+                      onClick={() => handleChangeDifficulty("expert")}
+                      className={`p-2 rounded-xl border text-left transition-all cursor-pointer ${
+                        activeRoom.difficulty === "expert"
+                          ? "bg-rose-500/25 border-rose-400 text-white shadow-sm ring-1 ring-rose-400"
+                          : "bg-slate-950 border-slate-800 text-slate-400 hover:text-white"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-black text-rose-400 flex items-center gap-1">
+                          <span>🔥</span> Expert
+                        </span>
+                        {activeRoom.difficulty === "expert" && (
+                          <span className="w-1.5 h-1.5 rounded-full bg-rose-400" />
+                        )}
+                      </div>
+                      <div className="text-[10px] text-slate-300 font-semibold mt-0.5">2.5x & 2x Bugs</div>
+                      <div className="text-[9px] text-rose-300/80">⚠️ None must escape!</div>
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="p-3 bg-slate-800/70 border border-slate-700 rounded-2xl flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xl">
+                      {activeRoom.difficulty === "expert"
+                        ? "🔥"
+                        : activeRoom.difficulty === "hard"
+                        ? "⚡"
+                        : "🟢"}
+                    </span>
+                    <div>
+                      <span className="text-[10px] text-slate-400 font-bold uppercase block">
+                        Room Difficulty (Set by Host)
+                      </span>
+                      <span className="text-xs font-black text-white capitalize">
+                        {activeRoom.difficulty || "easy"} Mode
+                      </span>
+                      <span className="text-[10px] text-slate-400 block">
+                        {activeRoom.difficulty === "expert"
+                          ? "2.5x Speed, 2x Bugs, None can escape, Save Butterflies!"
+                          : activeRoom.difficulty === "hard"
+                          ? "1.75x Speed (+0.75), Protect Butterflies (-1 life if killed)!"
+                          : "Standard 1.0x Speed, Classic rules"}
+                      </span>
+                    </div>
+                  </div>
+                  <span className="text-[10px] font-bold text-indigo-300 bg-indigo-500/10 px-2.5 py-1 rounded-full border border-indigo-500/30">
                     Host Decides
                   </span>
                 </div>

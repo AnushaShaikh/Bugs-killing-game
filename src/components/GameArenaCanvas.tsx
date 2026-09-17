@@ -1,10 +1,11 @@
 import React, { useRef, useEffect, useCallback } from "react";
-import { BugSpecies, WeaponType } from "../types";
+import { BugSpecies, DifficultyLevel, WeaponType } from "../types";
 import { WEAPONS } from "../data/weapons";
 import {
   playBugSquish,
   playMissWhoosh,
   playWeaponSound,
+  playPenaltyAlarm,
   triggerHaptic,
 } from "../utils/audio";
 
@@ -13,6 +14,7 @@ interface GameArenaCanvasProps {
   isPlaying: boolean;
   isSpectating?: boolean;
   speedMultiplier: number;
+  difficulty?: DifficultyLevel;
   kills: number;
   onHit: (info: {
     points: number;
@@ -26,6 +28,7 @@ interface GameArenaCanvasProps {
   }) => void;
   onMiss: () => void;
   onBugEscaped?: () => void;
+  onButterflyHarm?: () => void;
 }
 
 interface CanvasBug {
@@ -97,10 +100,12 @@ export const GameArenaCanvas: React.FC<GameArenaCanvasProps> = ({
   isPlaying,
   isSpectating = false,
   speedMultiplier,
+  difficulty = "easy",
   kills,
   onHit,
   onMiss,
   onBugEscaped,
+  onButterflyHarm,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -130,6 +135,12 @@ export const GameArenaCanvas: React.FC<GameArenaCanvasProps> = ({
   const dimensionsRef = useRef({ width: 800, height: 600 });
   const animFrameIdRef = useRef<number>(0);
   const lastSpawnTimeRef = useRef(0);
+
+  // Keep difficulty in a ref
+  const difficultyRef = useRef<DifficultyLevel>(difficulty);
+  useEffect(() => {
+    difficultyRef.current = difficulty;
+  }, [difficulty]);
 
   // Keep speedMultiplier in a ref so the loop updates seamlessly
   const speedRef = useRef(speedMultiplier);
@@ -185,11 +196,20 @@ export const GameArenaCanvas: React.FC<GameArenaCanvasProps> = ({
     const { width, height } = dimensionsRef.current;
     if (width <= 0 || height <= 0) return;
 
+    const diff = difficultyRef.current;
+    const butterflyCount = bugsRef.current.filter((b) => b.species === "butterfly").length;
+    const maxButterflies = diff === "expert" ? 2 : 1;
+    const canSpawnButterfly = (diff === "hard" || diff === "expert") && butterflyCount < maxButterflies;
+    const shouldSpawnButterfly = canSpawnButterfly && (Math.random() < 0.32 || butterflyCount === 0);
+
     const speciesList: BugSpecies[] = ["roach", "roach", "fly", "fly", "spider", "ant"];
     if (Math.random() < 0.35) speciesList.push("beetle");
     if (Math.random() < 0.15) speciesList.push("golden");
 
-    const species = speciesList[Math.floor(Math.random() * speciesList.length)];
+    const species: BugSpecies = shouldSpawnButterfly
+      ? "butterfly"
+      : speciesList[Math.floor(Math.random() * speciesList.length)];
+
     const id = Math.random().toString(36).substring(2, 9);
 
     // Spawn from outside border
@@ -234,7 +254,12 @@ export const GameArenaCanvas: React.FC<GameArenaCanvasProps> = ({
     let isFlying = false;
     let radius = 26;
 
-    if (species === "roach") {
+    if (species === "butterfly") {
+      speed = 105 + Math.random() * 35;
+      isFlying = true;
+      points = 0;
+      radius = 30;
+    } else if (species === "roach") {
       speed = 150 + Math.random() * 60; // fast darting scurry
       points = 180;
       radius = 28;
@@ -273,13 +298,14 @@ export const GameArenaCanvas: React.FC<GameArenaCanvasProps> = ({
       points,
       bornAt: Date.now(),
       isFlying,
-      scale: species === "golden" ? 1.15 : species === "beetle" ? 1.1 : 1,
+      scale: species === "butterfly" ? 1.15 : species === "golden" ? 1.15 : species === "beetle" ? 1.1 : 1,
       wigglePhase: Math.random() * 10,
       radius,
       hasEntered: false,
     };
 
-    if (bugsRef.current.length < 12) {
+    const maxCapacity = diff === "expert" ? 24 : 12;
+    if (bugsRef.current.length < maxCapacity) {
       bugsRef.current.push(newBug);
     }
   }, []);
@@ -302,8 +328,11 @@ export const GameArenaCanvas: React.FC<GameArenaCanvasProps> = ({
       const currentKills = killsRef.current;
       const active = isPlayingRef.current;
 
-      // 1. Bug Spawner check (gradually scales with kills and speed)
-      const spawnInterval = Math.max(900 - Math.min(currentKills * 8, 450), 400);
+      // 1. Bug Spawner check (in expert mode, bugs are doubled!)
+      const isExpert = difficultyRef.current === "expert";
+      const baseInterval = isExpert ? 420 : 900;
+      const minInterval = isExpert ? 200 : 400;
+      const spawnInterval = Math.max(baseInterval - Math.min(currentKills * 8, baseInterval * 0.5), minInterval);
       if (active && now - lastSpawnTimeRef.current > spawnInterval) {
         lastSpawnTimeRef.current = now;
         spawnBug();
@@ -368,8 +397,12 @@ export const GameArenaCanvas: React.FC<GameArenaCanvasProps> = ({
             const moveStep = bug.speed * currentSpeed * dt;
             bug.x += (dx / dist) * moveStep;
             bug.y += (dy / dist) * moveStep;
-            // Leg wiggle rate speeds up proportionally
-            bug.wigglePhase += dt * (18 * Math.sqrt(currentSpeed));
+            // Leg wiggle rate speeds up proportionally (butterflies flutter rhythmically)
+            if (bug.species === "butterfly") {
+              bug.wigglePhase += dt * 6.5;
+            } else {
+              bug.wigglePhase += dt * (18 * Math.sqrt(currentSpeed));
+            }
           }
         }
 
@@ -381,8 +414,10 @@ export const GameArenaCanvas: React.FC<GameArenaCanvasProps> = ({
           bug.hasEntered &&
           (bug.x < -60 || bug.x > width + 60 || bug.y < -60 || bug.y > height + 60)
         ) {
+          const isButterfly = bug.species === "butterfly";
           bugs.splice(i, 1);
-          if (onBugEscaped && active) {
+          // In expert mode: none of the bugs should escape kill all, and safe the butterflies!
+          if (!isButterfly && isExpert && onBugEscaped && active) {
             onBugEscaped();
           }
         } else if (bug.x < -100 || bug.x > width + 100 || bug.y < -100 || bug.y > height + 100) {
@@ -484,6 +519,7 @@ export const GameArenaCanvas: React.FC<GameArenaCanvasProps> = ({
     let totalPointsAwarded = 0;
     let killedAny = false;
     let isDirect = false;
+    let butterflyStruck = false;
 
     const bugs = bugsRef.current;
     for (let i = bugs.length - 1; i >= 0; i--) {
@@ -491,6 +527,29 @@ export const GameArenaCanvas: React.FC<GameArenaCanvasProps> = ({
       const dist = Math.hypot(strikeX - bug.x, strikeY - bug.y);
 
       if (dist <= strikeRadius + bug.radius) {
+        // Struck a butterfly! "not allowed to kill if any player kills the butterfly one life will be lost"
+        if (bug.species === "butterfly") {
+          butterflyStruck = true;
+          // Spawn glowing sparkle particles
+          for (let pIdx = 0; pIdx < 18; pIdx++) {
+            const angle = Math.random() * Math.PI * 2;
+            const spd = 2 + Math.random() * 6;
+            particlesRef.current.push({
+              id: Math.random().toString(),
+              x: bug.x,
+              y: bug.y,
+              vx: Math.cos(angle) * spd,
+              vy: Math.sin(angle) * spd - 2,
+              color: Math.random() > 0.5 ? "#38bdf8" : "#fbbf24",
+              size: 3 + Math.random() * 3,
+              life: 30,
+              maxLife: 30,
+            });
+          }
+          bugs.splice(i, 1);
+          continue;
+        }
+
         hitCount++;
         bug.hp -= 1;
 
@@ -519,6 +578,7 @@ export const GameArenaCanvas: React.FC<GameArenaCanvasProps> = ({
             beetle: { wet: "#065f46", dry: "#334155" },
             spider: { wet: "#3b0764", dry: "#6b7280" },
             golden: { wet: "#d97706", dry: "#b45309" },
+            butterfly: { wet: "#0284c7", dry: "#38bdf8" },
           };
 
           const speciesColors = splatColors[bug.species] || { wet: "#15803d", dry: "#475569" };
@@ -578,6 +638,15 @@ export const GameArenaCanvas: React.FC<GameArenaCanvasProps> = ({
       }
     }
 
+    // Process butterfly strike penalty (1 life lost!)
+    if (butterflyStruck) {
+      playPenaltyAlarm();
+      triggerHaptic(70);
+      if (onButterflyHarm) {
+        onButterflyHarm();
+      }
+    }
+
     if (hitCount > 0) {
       const remarks = [
         "CRITICAL STRIKE!",
@@ -601,7 +670,7 @@ export const GameArenaCanvas: React.FC<GameArenaCanvasProps> = ({
         strikeX,
         strikeY,
       });
-    } else {
+    } else if (!butterflyStruck) {
       // Missed swing!
       playMissWhoosh();
       onMiss();
@@ -753,7 +822,9 @@ function drawRealisticBug(ctx: CanvasRenderingContext2D, bug: CanvasBug) {
     ctx.fill();
   }
 
-  if (bug.species === "roach") {
+  if (bug.species === "butterfly") {
+    drawRealisticButterfly(ctx, bug);
+  } else if (bug.species === "roach") {
     drawRealisticRoach(ctx, bug);
   } else if (bug.species === "fly") {
     drawRealisticFly(ctx, bug);
@@ -767,6 +838,149 @@ function drawRealisticBug(ctx: CanvasRenderingContext2D, bug: CanvasBug) {
     drawRealisticAnt(ctx, bug);
   }
 
+  ctx.restore();
+}
+
+/**
+ * Realistic Morpho / Monarch Butterfly
+ * Features:
+ * - Slender segmented thorax & abdomen
+ * - Curved antennae with golden club tips
+ * - 3D sinusoidal flapping wings with foreshortening
+ * - Iridescent azure/indigo gradient with dark vein networks and marginal dots
+ * - Soft glowing protected aura and "SAFE 🦋" floater badge
+ */
+function drawRealisticButterfly(ctx: CanvasRenderingContext2D, bug: CanvasBug) {
+  const wiggle = bug.wigglePhase;
+  // Sinusoidal 3D wing flap
+  const flap = Math.cos(wiggle * 2.4);
+  const wingFold = 0.2 + Math.abs(flap) * 0.8;
+
+  // Ethereal protective glow aura around the protected butterfly
+  ctx.save();
+  ctx.shadowColor = "rgba(56, 189, 248, 0.65)";
+  ctx.shadowBlur = 14;
+
+  // Slender Thorax & Abdomen
+  ctx.fillStyle = "#0f172a";
+  ctx.beginPath();
+  ctx.ellipse(0, 3, 3.5, 14, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Head & Eyes
+  ctx.fillStyle = "#1e293b";
+  ctx.beginPath();
+  ctx.arc(0, -12, 4.5, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Curved Clubbed Antennae
+  ctx.strokeStyle = "#334155";
+  ctx.lineWidth = 1.4;
+  ctx.beginPath();
+  ctx.moveTo(-1.5, -14);
+  ctx.quadraticCurveTo(-8, -26, -14, -28);
+  ctx.moveTo(1.5, -14);
+  ctx.quadraticCurveTo(8, -26, 14, -28);
+  ctx.stroke();
+
+  // Golden tips
+  ctx.fillStyle = "#fbbf24";
+  ctx.beginPath();
+  ctx.arc(-14, -28, 2, 0, Math.PI * 2);
+  ctx.arc(14, -28, 2, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Left & Right Wings with 3D Flap Scale
+  const drawWingPair = (side: 1 | -1) => {
+    ctx.save();
+    ctx.scale(side * wingFold, 1);
+
+    // Forewing (Upper large wing) - Morpho Azure to Royal Indigo gradient
+    const foreGrad = ctx.createRadialGradient(0, -2, 2, 20, -15, 34);
+    foreGrad.addColorStop(0, "#e0f2fe");
+    foreGrad.addColorStop(0.3, "#38bdf8");
+    foreGrad.addColorStop(0.75, "#0284c7");
+    foreGrad.addColorStop(1, "#0f172a");
+
+    ctx.fillStyle = foreGrad;
+    ctx.beginPath();
+    ctx.moveTo(2, -8);
+    ctx.bezierCurveTo(12, -32, 34, -28, 38, -10);
+    ctx.bezierCurveTo(40, 2, 22, 6, 2, -2);
+    ctx.closePath();
+    ctx.fill();
+
+    // Dark Wing Margin & Spots
+    ctx.strokeStyle = "#090d16";
+    ctx.lineWidth = 2.2;
+    ctx.stroke();
+
+    // Delicate White Border Spots
+    ctx.fillStyle = "#ffffff";
+    const dots = [
+      { x: 34, y: -16 },
+      { x: 36, y: -8 },
+      { x: 33, y: 0 },
+    ];
+    for (const dot of dots) {
+      ctx.beginPath();
+      ctx.arc(dot.x, dot.y, 1.2, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // Hindwing (Lower rounded wing)
+    const hindGrad = ctx.createRadialGradient(0, 5, 2, 16, 18, 26);
+    hindGrad.addColorStop(0, "#7dd3fc");
+    hindGrad.addColorStop(0.5, "#0284c7");
+    hindGrad.addColorStop(0.9, "#1e1b4b");
+    hindGrad.addColorStop(1, "#090d16");
+
+    ctx.fillStyle = hindGrad;
+    ctx.beginPath();
+    ctx.moveTo(2, 0);
+    ctx.bezierCurveTo(24, 6, 32, 22, 16, 32);
+    ctx.bezierCurveTo(4, 35, 1, 20, 2, 6);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+
+    // Delicate Veins on forewing
+    ctx.strokeStyle = "rgba(15, 23, 42, 0.4)";
+    ctx.lineWidth = 0.9;
+    ctx.beginPath();
+    ctx.moveTo(2, -6);
+    ctx.lineTo(24, -14);
+    ctx.moveTo(2, -6);
+    ctx.lineTo(28, -6);
+    ctx.moveTo(2, -6);
+    ctx.lineTo(20, 2);
+    ctx.stroke();
+
+    ctx.restore();
+  };
+
+  drawWingPair(1);
+  drawWingPair(-1);
+
+  ctx.restore();
+
+  // Soft "SAFE 🦋" indicator tag floating above
+  ctx.save();
+  ctx.rotate(-bug.angle); // Keep badge upright
+  ctx.translate(0, -34);
+  ctx.fillStyle = "rgba(15, 23, 42, 0.9)";
+  ctx.strokeStyle = "rgba(56, 189, 248, 0.85)";
+  ctx.lineWidth = 1.2;
+  ctx.beginPath();
+  ctx.roundRect(-28, -10, 56, 18, 9);
+  ctx.fill();
+  ctx.stroke();
+
+  ctx.fillStyle = "#38bdf8";
+  ctx.font = "bold 10px sans-serif";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText("SAFE 🦋", 0, 0);
   ctx.restore();
 }
 

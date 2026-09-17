@@ -1,6 +1,6 @@
 import React from "react";
-import { WeaponType } from "../types";
-import { Volume2, VolumeX, Heart, ArrowLeft } from "lucide-react";
+import { DifficultyLevel, WeaponType } from "../types";
+import { Volume2, VolumeX, Heart, ArrowLeft, ShieldAlert } from "lucide-react";
 
 interface MinimalHudProps {
   score: number;
@@ -9,6 +9,8 @@ interface MinimalHudProps {
   lives: number;
   maxLives: number;
   speedMultiplier: number;
+  difficulty?: DifficultyLevel;
+  penaltyNotice?: string | null;
   weapon?: WeaponType;
   soundEnabled: boolean;
   onToggleSound: () => void;
@@ -29,6 +31,8 @@ export const MinimalHud: React.FC<MinimalHudProps> = ({
   lives,
   maxLives,
   speedMultiplier,
+  difficulty = "easy",
+  penaltyNotice,
   soundEnabled,
   onToggleSound,
   onBackToMenu,
@@ -70,6 +74,28 @@ export const MinimalHud: React.FC<MinimalHudProps> = ({
           </div>
         </div>
 
+        {/* Difficulty Badge */}
+        <div
+          className={`backdrop-blur-md px-2.5 py-1.5 rounded-2xl border shadow-xl flex items-center gap-1.5 text-xs font-black uppercase tracking-wider ${
+            difficulty === "expert"
+              ? "bg-rose-950/80 border-rose-600/70 text-rose-300"
+              : difficulty === "hard"
+              ? "bg-amber-950/80 border-amber-500/70 text-amber-300"
+              : "bg-slate-950/80 border-slate-800 text-emerald-400"
+          }`}
+          title={
+            difficulty === "expert"
+              ? "Expert: 2.5x Speed, 2x Bugs, None Can Escape, Protect Butterflies!"
+              : difficulty === "hard"
+              ? "Hard: 1.75x Speed (+0.75), Protect Butterflies (-1 life if killed)!"
+              : "Easy: Standard Game"
+          }
+        >
+          <span>{difficulty === "expert" ? "🔥" : difficulty === "hard" ? "⚡" : "🟢"}</span>
+          <span>{difficulty}</span>
+          {difficulty !== "easy" && <span className="text-[10px] text-amber-300/80 normal-case">🦋 safe</span>}
+        </div>
+
         {/* Room Info Badge (If in a multiplayer room) */}
         {roomInfo && (
           <div className="bg-indigo-950/85 backdrop-blur-md px-3 py-1.5 rounded-2xl border border-indigo-500/40 text-white shadow-xl flex items-center gap-2 text-xs font-black">
@@ -84,6 +110,16 @@ export const MinimalHud: React.FC<MinimalHudProps> = ({
           </div>
         )}
       </div>
+
+      {/* Floating Penalty Notice Warning */}
+      {penaltyNotice && (
+        <div className="absolute top-16 left-1/2 -translate-x-1/2 pointer-events-none z-50 animate-bounce">
+          <div className="bg-rose-600 text-white font-black px-4 py-2 rounded-2xl shadow-2xl border-2 border-rose-300 flex items-center gap-2 text-xs sm:text-sm tracking-wide uppercase">
+            <ShieldAlert className="w-5 h-5 text-amber-300 animate-pulse" />
+            <span>{penaltyNotice}</span>
+          </div>
+        </div>
+      )}
 
       {/* Top Right: Lives (Miss Indicator) & Controls */}
       <div className="pointer-events-auto flex items-center gap-2">

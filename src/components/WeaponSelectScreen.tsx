@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { WeaponType } from "../types";
+import { DifficultyLevel, WeaponType } from "../types";
 import { WEAPONS } from "../data/weapons";
 import { Check, Play, Zap, Crosshair, Sparkles, Trophy, ArrowLeft } from "lucide-react";
 
 interface WeaponSelectScreenProps {
-  onSelectAndStart: (weapon: WeaponType) => void;
+  onSelectAndStart: (weapon: WeaponType, difficulty: DifficultyLevel) => void;
   defaultWeapon?: WeaponType;
+  defaultDifficulty?: DifficultyLevel;
   highScore: number;
   totalKills: number;
   onBack?: () => void;
@@ -14,11 +15,13 @@ interface WeaponSelectScreenProps {
 export const WeaponSelectScreen: React.FC<WeaponSelectScreenProps> = ({
   onSelectAndStart,
   defaultWeapon = "shoe",
+  defaultDifficulty = "easy",
   highScore,
   totalKills,
   onBack,
 }) => {
   const [chosenWeapon, setChosenWeapon] = useState<WeaponType>(defaultWeapon);
+  const [chosenDifficulty, setChosenDifficulty] = useState<DifficultyLevel>(defaultDifficulty);
 
   const weaponList: WeaponType[] = ["shoe", "newspaper", "swatter"];
 
@@ -30,12 +33,12 @@ export const WeaponSelectScreen: React.FC<WeaponSelectScreenProps> = ({
       if (e.key === "3") setChosenWeapon("swatter");
       if (e.key === "Enter" || e.key === " ") {
         e.preventDefault();
-        onSelectAndStart(chosenWeapon);
+        onSelectAndStart(chosenWeapon, chosenDifficulty);
       }
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [chosenWeapon, onSelectAndStart]);
+  }, [chosenWeapon, chosenDifficulty, onSelectAndStart]);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-slate-950/80 backdrop-blur-md overflow-y-auto">
@@ -413,11 +416,100 @@ export const WeaponSelectScreen: React.FC<WeaponSelectScreenProps> = ({
           })}
         </div>
 
+        {/* Difficulty Level Selector */}
+        <div className="mt-5 pt-4 border-t border-slate-800/80">
+          <div className="flex items-center justify-between mb-2.5">
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-black text-slate-300 uppercase tracking-wider">
+                Difficulty Level
+              </span>
+              <span className="text-[11px] text-slate-500">Pick your pest control intensity</span>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+            {/* EASY */}
+            <button
+              type="button"
+              id="difficulty-select-easy"
+              onClick={() => setChosenDifficulty("easy")}
+              className={`p-3 rounded-2xl border text-left transition-all cursor-pointer relative overflow-hidden ${
+                chosenDifficulty === "easy"
+                  ? "bg-emerald-950/40 border-emerald-500/80 shadow-lg shadow-emerald-500/10"
+                  : "bg-slate-950/50 border-slate-800 hover:border-slate-700 opacity-80"
+              }`}
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-black text-emerald-400 flex items-center gap-1.5 uppercase">
+                  <span>🟢</span> Easy
+                </span>
+                {chosenDifficulty === "easy" && (
+                  <span className="w-2 h-2 rounded-full bg-emerald-400" />
+                )}
+              </div>
+              <p className="text-[11px] text-slate-300 font-semibold mt-1">Standard 1.0x Speed</p>
+              <p className="text-[10px] text-slate-400 mt-0.5">Classic bugs, gentle pace.</p>
+            </button>
+
+            {/* HARD */}
+            <button
+              type="button"
+              id="difficulty-select-hard"
+              onClick={() => setChosenDifficulty("hard")}
+              className={`p-3 rounded-2xl border text-left transition-all cursor-pointer relative overflow-hidden ${
+                chosenDifficulty === "hard"
+                  ? "bg-amber-950/40 border-amber-500/80 shadow-lg shadow-amber-500/10"
+                  : "bg-slate-950/50 border-slate-800 hover:border-slate-700 opacity-80"
+              }`}
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-black text-amber-400 flex items-center gap-1.5 uppercase">
+                  <span>⚡</span> Hard
+                </span>
+                {chosenDifficulty === "hard" && (
+                  <span className="w-2 h-2 rounded-full bg-amber-400" />
+                )}
+              </div>
+              <p className="text-[11px] text-slate-300 font-semibold mt-1">+0.75 Speed (1.75x)</p>
+              <p className="text-[10px] text-amber-300/80 mt-0.5">
+                🦋 Save Butterflies! (-1 life if killed)
+              </p>
+            </button>
+
+            {/* EXPERT */}
+            <button
+              type="button"
+              id="difficulty-select-expert"
+              onClick={() => setChosenDifficulty("expert")}
+              className={`p-3 rounded-2xl border text-left transition-all cursor-pointer relative overflow-hidden ${
+                chosenDifficulty === "expert"
+                  ? "bg-rose-950/40 border-rose-500/80 shadow-lg shadow-rose-500/10"
+                  : "bg-slate-950/50 border-slate-800 hover:border-slate-700 opacity-80"
+              }`}
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-black text-rose-400 flex items-center gap-1.5 uppercase">
+                  <span>🔥</span> Expert
+                </span>
+                {chosenDifficulty === "expert" && (
+                  <span className="w-2 h-2 rounded-full bg-rose-400" />
+                )}
+              </div>
+              <p className="text-[11px] text-slate-300 font-semibold mt-1">2.5x Speed • 2x Bugs</p>
+              <p className="text-[10px] text-rose-300/80 mt-0.5">
+                ⚠️ None must escape! • 🦋 Save Butterflies
+              </p>
+            </button>
+          </div>
+        </div>
+
         {/* Footer & Start Game Action */}
         <div className="mt-6 pt-5 border-t border-slate-800/80 flex flex-col sm:flex-row items-center justify-between gap-3">
           <div className="text-xs text-slate-400 text-center sm:text-left flex items-center gap-2">
             <span>Selected:</span>
             <span className="text-white font-bold">{WEAPONS[chosenWeapon].name}</span>
+            <span className="text-slate-600">•</span>
+            <span className="capitalize font-bold text-amber-400">{chosenDifficulty}</span>
             <span className="hidden sm:inline text-slate-600">•</span>
             <span className="hidden sm:inline text-slate-400">
               Press <kbd className="px-1.5 py-0.5 rounded bg-slate-800 border border-slate-700 text-slate-300 text-[10px] font-mono">1</kbd> <kbd className="px-1.5 py-0.5 rounded bg-slate-800 border border-slate-700 text-slate-300 text-[10px] font-mono">2</kbd> <kbd className="px-1.5 py-0.5 rounded bg-slate-800 border border-slate-700 text-slate-300 text-[10px] font-mono">3</kbd> or <kbd className="px-1.5 py-0.5 rounded bg-slate-800 border border-slate-700 text-slate-300 text-[10px] font-mono">Enter</kbd>
@@ -427,7 +519,7 @@ export const WeaponSelectScreen: React.FC<WeaponSelectScreenProps> = ({
           <button
             type="button"
             id="start-match-with-weapon-button"
-            onClick={() => onSelectAndStart(chosenWeapon)}
+            onClick={() => onSelectAndStart(chosenWeapon, chosenDifficulty)}
             className="w-full sm:w-auto px-7 py-3 bg-amber-500 hover:bg-amber-400 active:scale-[0.98] text-slate-950 font-black text-sm tracking-wide rounded-xl shadow-lg shadow-amber-500/20 transition-all flex items-center justify-center gap-2 cursor-pointer"
           >
             <Play className="w-4 h-4 fill-slate-950" />

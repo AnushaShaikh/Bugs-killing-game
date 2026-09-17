@@ -64,6 +64,7 @@ interface Room {
   winnerName?: string;
   totalStartedPlayers?: number;
   roomWeapon: "shoe" | "newspaper" | "swatter";
+  difficulty: "easy" | "hard" | "expert";
   roundTimer?: NodeJS.Timeout;
   emptyCleanupTimer?: NodeJS.Timeout;
 }
@@ -135,6 +136,7 @@ async function startServer() {
           playerCount: r.players.size,
           maxPlayers: 12,
           roomWeapon: r.roomWeapon || "shoe",
+          difficulty: r.difficulty || "easy",
           createdAt: Date.now(),
         };
       });
@@ -268,6 +270,7 @@ async function startServer() {
         status: room.status,
         timeLeft: room.timeLeft,
         roomWeapon: room.roomWeapon || "shoe",
+        difficulty: room.difficulty || "easy",
         winnerId: room.winnerId,
         winnerName: room.winnerName,
         totalStartedPlayers: room.totalStartedPlayers ?? room.players.size,
@@ -292,6 +295,7 @@ async function startServer() {
           currentRoomId = roomId;
 
           const chosenWeapon = ["shoe", "newspaper", "swatter"].includes(data.weapon) ? data.weapon : "shoe";
+          const chosenDifficulty = ["easy", "hard", "expert"].includes(data.difficulty) ? data.difficulty : "easy";
 
           const player: RoomPlayer = {
             id: pId,
@@ -316,6 +320,7 @@ async function startServer() {
             status: "waiting",
             timeLeft: 999,
             roomWeapon: chosenWeapon,
+            difficulty: chosenDifficulty,
           };
           rooms.set(roomId, newRoom);
 
@@ -400,6 +405,20 @@ async function startServer() {
             room.players.forEach((p) => {
               p.weapon = validWeapon;
             });
+            broadcastToRoom(currentRoomId, "room_updated", {
+              room: getRoomSummary(room),
+            });
+          }
+        } else if (type === "update_difficulty") {
+          if (!currentRoomId || !playerId) return;
+          const room = rooms.get(currentRoomId);
+          if (!room) return;
+          const player = room.players.get(playerId);
+
+          // The host decides the level!
+          if (player && player.isHost && data.difficulty) {
+            const validDiff = ["easy", "hard", "expert"].includes(data.difficulty) ? data.difficulty : "easy";
+            room.difficulty = validDiff;
             broadcastToRoom(currentRoomId, "room_updated", {
               room: getRoomSummary(room),
             });

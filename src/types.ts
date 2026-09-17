@@ -16,7 +16,9 @@ export interface WeaponInfo {
   color: string;
 }
 
-export type BugSpecies = "ant" | "roach" | "fly" | "beetle" | "spider" | "golden";
+export type DifficultyLevel = "easy" | "hard" | "expert";
+
+export type BugSpecies = "ant" | "roach" | "fly" | "beetle" | "spider" | "golden" | "butterfly";
 
 export interface Bug {
   id: string;
@@ -134,6 +136,7 @@ export interface MultiplayerRoom {
   status: "waiting" | "starting" | "playing" | "ended";
   timeLeft: number;
   roomWeapon?: WeaponType;
+  difficulty?: DifficultyLevel;
   players: MultiplayerPlayer[];
   winnerId?: string;
   winnerName?: string;
@@ -179,5 +182,6 @@ export interface OpenRoomSummary {
   playerCount: number;
   maxPlayers: number;
   roomWeapon: WeaponType;
+  difficulty?: DifficultyLevel;
   createdAt: number;
 }

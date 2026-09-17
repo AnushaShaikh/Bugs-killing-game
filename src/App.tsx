@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import {
+  DifficultyLevel,
   EliminationNotification,
   GameStats,
   MultiplayerPlayer,
@@ -84,8 +85,28 @@ export default function App() {
   const [connectionStatus, setConnectionStatus] = useState<"connecting" | "connected" | "disconnected">("disconnected");
   const [urlJoinCode, setUrlJoinCode] = useState<string>("");
 
-  // Simple constant speedMultiplier (no progressive speed ramp-up during gameplay)
-  const speedMultiplier = 1.0;
+  // Difficulty Level (Solo and Multiplayer)
+  const [soloDifficulty, setSoloDifficulty] = useState<DifficultyLevel>("easy");
+  const [penaltyNotice, setPenaltyNotice] = useState<string | null>(null);
+  const penaltyTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  const showPenaltyNotice = (msg: string) => {
+    if (penaltyTimerRef.current) clearTimeout(penaltyTimerRef.current);
+    setPenaltyNotice(msg);
+    penaltyTimerRef.current = setTimeout(() => {
+      setPenaltyNotice(null);
+    }, 2400);
+  };
+
+  const currentDifficulty: DifficultyLevel =
+    playMode === "room" ? (activeRoom?.difficulty || "easy") : soloDifficulty;
+
+  // Speed multiplier based on difficulty:
+  // Easy: 1.0 (current game)
+  // Hard: 1.75 (increased by 0.75x)
+  // Expert: 2.5 (increased more than hard level)
+  const speedMultiplier =
+    currentDifficulty === "expert" ? 2.5 : currentDifficulty === "hard" ? 1.75 : 1.0;
 
   // Cross-device User Profile
   const [profile, setProfile] = useState<UserProfile>(() => {
@@ -404,8 +425,9 @@ export default function App() {
   };
 
   // Weapon selected
-  const handleWeaponConfirmed = (weaponChoice: WeaponType) => {
+  const handleWeaponConfirmed = (weaponChoice: WeaponType, difficultyChoice: DifficultyLevel = "easy") => {
     setSelectedWeapon(weaponChoice);
+    setSoloDifficulty(difficultyChoice);
     setProfile((prev) => ({ ...prev, selectedWeapon: weaponChoice }));
     setShowWeaponSelect(false);
 
@@ -495,19 +517,23 @@ export default function App() {
     }
   };
 
-  // Handle missed bug or bug escaped
-  const handleMiss = () => {
+  // Central life loss deduction logic
+  const deductLife = (reason: "miss" | "butterfly" | "escaped") => {
     if (stats.isGameOver || showWeaponSelect || isSpectating || playMode === null) return;
 
-    // Red flash alert
     setMissAlert(true);
-    setTimeout(() => setMissAlert(false), 300);
+    setTimeout(() => setMissAlert(false), 350);
+
+    if (reason === "butterfly") {
+      showPenaltyNotice("⚠️ BUTTERFLY KILLED! -1 LIFE");
+    } else if (reason === "escaped") {
+      showPenaltyNotice("⚠️ BUG ESCAPED! -1 LIFE");
+    }
 
     setLives((prevLives) => {
       const nextLives = Math.max(0, prevLives - 1);
 
       if (playMode === "room") {
-        // Send life lost event to multiplayer room
         if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN && activeRoom) {
           wsRef.current.send(
             JSON.stringify({
@@ -518,12 +544,10 @@ export default function App() {
         }
 
         if (nextLives === 0) {
-          // Player is knocked out in Room Battle Royale!
           setIsSpectating(true);
           playPlayerEliminatedSound();
         }
       } else {
-        // Solo game over
         if (nextLives === 0) {
           setTimeout(() => {
             endSoloRound();
@@ -533,6 +557,13 @@ export default function App() {
 
       return nextLives;
     });
+  };
+
+  // Handle missed swing
+  const handleMiss = () => {
+    if (stats.isGameOver || showWeaponSelect || isSpectating || playMode === null) return;
+
+    deductLife("miss");
 
     setStats((prev) => {
       const newTotalSwings = prev.totalSwings + 1;
@@ -545,6 +576,18 @@ export default function App() {
         feverActive: false,
       };
     });
+  };
+
+  // Handle butterfly struck (not allowed to kill, -1 life)
+  const handleButterflyHarm = () => {
+    deductLife("butterfly");
+  };
+
+  // Handle bug escape (in expert mode: none of the bugs should escape kill all, -1 life)
+  const handleBugEscaped = () => {
+    if (currentDifficulty === "expert") {
+      deductLife("escaped");
+    }
   };
 
   // Spectator cheers
@@ -598,10 +641,12 @@ export default function App() {
           isPlaying={playMode !== null && !stats.isGameOver && !showWeaponSelect && !showMultiplayerLobby && !showRoomLeaderboard}
           isSpectating={isSpectating}
           speedMultiplier={speedMultiplier}
+          difficulty={currentDifficulty}
           kills={stats.kills}
           onHit={handleCanvasHit}
           onMiss={handleMiss}
-          onBugEscaped={handleMiss}
+          onBugEscaped={handleBugEscaped}
+          onButterflyHarm={handleButterflyHarm}
         />
 
         {/* Fever Mode Glow Border */}
@@ -639,6 +684,9 @@ export default function App() {
           lives={lives}
           maxLives={MAX_LIVES}
           speedMultiplier={speedMultiplier}
+          difficulty={currentDifficulty}
+          penaltyNotice={penaltyNotice}
+          weapon={selectedWeapon}
           soundEnabled={soundOn}
           onToggleSound={toggleSound}
           onBackToMenu={handleBackToMenu}
@@ -693,6 +741,7 @@ export default function App() {
       {showWeaponSelect && (
         <WeaponSelectScreen
           defaultWeapon={selectedWeapon}
+          defaultDifficulty={soloDifficulty}
           highScore={profile.highScore}
           totalKills={profile.totalKills}
           onSelectAndStart={handleWeaponConfirmed}
