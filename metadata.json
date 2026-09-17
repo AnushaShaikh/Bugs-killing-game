@@ -1,0 +1,6 @@
+{
+  "name": "Bug Whacker: Cartoon Household Smash",
+  "description": "Fast-paced cartoon bug-smashing game set on modern white ceramic tiles with shoe, newspaper, and fly swatter weapons, real-time multiplayer, global leaderboards, and cross-device sync.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

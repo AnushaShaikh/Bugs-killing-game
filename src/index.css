@@ -1,0 +1,133 @@
+@import "tailwindcss";
+
+@layer base {
+  body {
+    font-family: 'Fredoka', 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+  }
+}
+
+/* Household White Tiles with Subtle Drop Shadow */
+.kitchen-tile-floor {
+  background-color: #f8fafc;
+  background-image: 
+    linear-gradient(to right, rgba(203, 213, 225, 0.45) 1.5px, transparent 1.5px),
+    linear-gradient(to bottom, rgba(203, 213, 225, 0.45) 1.5px, transparent 1.5px);
+  background-size: 80px 80px;
+  box-shadow: inset 0 0 40px rgba(15, 23, 42, 0.05);
+}
+
+@media (max-width: 640px) {
+  .kitchen-tile-floor {
+    background-size: 60px 60px;
+  }
+}
+
+/* Individual tile sheen effect */
+.tile-pattern {
+  position: relative;
+}
+.tile-pattern::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.6) 0%, transparent 70%);
+  background-size: 160px 160px;
+  opacity: 0.7;
+}
+
+/* Comic / Cartoon High-Energy Keyframes */
+@keyframes comicPop {
+  0% {
+    transform: translate(-50%, -50%) scale(0.3) rotate(-15deg);
+    opacity: 0;
+  }
+  40% {
+    transform: translate(-50%, -50%) scale(1.3) rotate(6deg);
+    opacity: 1;
+  }
+  70% {
+    transform: translate(-50%, -50%) scale(1.05) rotate(-3deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -80%) scale(0.9) rotate(0deg);
+    opacity: 0;
+  }
+}
+
+@keyframes squishDecal {
+  0% {
+    transform: translate(-50%, -50%) scale(0.4);
+    opacity: 0.95;
+  }
+  20% {
+    transform: translate(-50%, -50%) scale(1.15);
+    opacity: 0.9;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 0.35;
+  }
+}
+
+@keyframes bugWiggle {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(-5deg) translateY(-1px); }
+  75% { transform: rotate(5deg) translateY(1px); }
+}
+
+@keyframes spiderLegs {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.04, 0.96); }
+}
+
+@keyframes flyBuzz {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  25% { transform: translateY(-3px) rotate(4deg); }
+  50% { transform: translateY(1px) rotate(-3deg); }
+  75% { transform: translateY(-2px) rotate(3deg); }
+}
+
+.animate-comic-pop {
+  animation: comicPop 0.85s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+.animate-squish-decal {
+  animation: squishDecal 4s ease-out forwards;
+}
+
+.animate-bug-wiggle {
+  animation: bugWiggle 0.18s infinite ease-in-out;
+}
+
+.animate-spider-legs {
+  animation: spiderLegs 0.25s infinite ease-in-out;
+}
+
+.animate-fly-buzz {
+  animation: flyBuzz 0.12s infinite ease-in-out;
+}
+
+/* Custom Cartoon Text Outline */
+.cartoon-text-shadow {
+  text-shadow: 
+    -2px -2px 0 #1e293b,
+     2px -2px 0 #1e293b,
+    -2px  2px 0 #1e293b,
+     2px  2px 0 #1e293b,
+     0px  4px 0 #0f172a,
+     0px  6px 8px rgba(0,0,0,0.25);
+}
+
+.cartoon-text-sm {
+  text-shadow: 
+    -1px -1px 0 #0f172a,
+     1px -1px 0 #0f172a,
+    -1px  1px 0 #0f172a,
+     1px  1px 0 #0f172a,
+     0px  2px 0 #0f172a;
+}
