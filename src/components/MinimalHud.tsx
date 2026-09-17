@@ -1,7 +1,6 @@
 import React from "react";
 import { WeaponType } from "../types";
-import { WEAPONS } from "../data/weapons";
-import { Volume2, VolumeX, RotateCcw, Heart } from "lucide-react";
+import { Volume2, VolumeX, Heart, ArrowLeft } from "lucide-react";
 
 interface MinimalHudProps {
   score: number;
@@ -10,10 +9,10 @@ interface MinimalHudProps {
   lives: number;
   maxLives: number;
   speedMultiplier: number;
-  weapon: WeaponType;
+  weapon?: WeaponType;
   soundEnabled: boolean;
   onToggleSound: () => void;
-  onChangeWeapon: () => void;
+  onBackToMenu?: () => void;
   roomInfo?: {
     roomId: string;
     aliveCount: number;
@@ -30,19 +29,29 @@ export const MinimalHud: React.FC<MinimalHudProps> = ({
   lives,
   maxLives,
   speedMultiplier,
-  weapon,
   soundEnabled,
   onToggleSound,
-  onChangeWeapon,
+  onBackToMenu,
   roomInfo,
-  onExitRoom,
 }) => {
-  const activeWeapon = WEAPONS[weapon];
 
   return (
     <div className="absolute top-0 left-0 right-0 z-30 pointer-events-none p-3 sm:p-4 flex items-start justify-between">
-      {/* Top Left: Compact High-Contrast Score + Room Indicator */}
+      {/* Top Left: Compact High-Contrast Score + Room Indicator + Back to Menu Button */}
       <div className="pointer-events-auto flex items-center gap-2">
+        {onBackToMenu && (
+          <button
+            type="button"
+            onClick={onBackToMenu}
+            id="hud-back-to-menu-btn"
+            className="bg-slate-950/85 hover:bg-slate-900 border border-slate-700 hover:border-indigo-400 px-3 py-1.5 sm:py-2 rounded-2xl text-slate-200 hover:text-white shadow-xl flex items-center gap-1.5 transition-all cursor-pointer font-black text-xs group"
+            title="Back to Game Mode Selection (Switch to Multiplayer)"
+          >
+            <ArrowLeft className="w-4 h-4 text-indigo-400 group-hover:-translate-x-0.5 transition-transform" />
+            <span className="hidden sm:inline">Menu</span>
+          </button>
+        )}
+
         <div className="bg-slate-950/80 backdrop-blur-md px-3 py-1.5 rounded-2xl border border-slate-800 text-white shadow-xl flex items-center gap-2 sm:gap-2.5">
           <div className="flex items-center gap-1.5">
             <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">
@@ -55,22 +64,10 @@ export const MinimalHud: React.FC<MinimalHudProps> = ({
 
           <div className="h-3.5 w-px bg-slate-800" />
 
-          <div className="flex items-center gap-1.5 text-xs font-bold text-slate-300">
-            <span title={`${kills} bugs squashed`} className="flex items-center gap-0.5 text-slate-200">
-              <span>🐛</span>
-              <span>{kills}</span>
-            </span>
-            <span className="text-cyan-400 text-[11px] font-bold" title={`Bug speed: ${speedMultiplier.toFixed(1)}x`}>
-              {speedMultiplier.toFixed(1)}x
-            </span>
+          <div className="flex items-center gap-1 text-xs font-bold text-slate-300" title={`${kills} bugs squashed`}>
+            <span>🐛</span>
+            <span>{kills}</span>
           </div>
-
-          {combo > 1 && (
-            <span className="px-1.5 py-0.5 rounded-md bg-amber-500/20 border border-amber-500/40 text-amber-300 text-[11px] font-black animate-pulse flex items-center gap-0.5">
-              <span>🔥</span>
-              <span>{combo}x</span>
-            </span>
-          )}
         </div>
 
         {/* Room Info Badge (If in a multiplayer room) */}
@@ -118,21 +115,6 @@ export const MinimalHud: React.FC<MinimalHudProps> = ({
             ))}
           </div>
         </div>
-
-        {/* Weapon Badge & Quick Switch */}
-        <button
-          type="button"
-          onClick={onChangeWeapon}
-          id="hud-switch-weapon-btn"
-          className="bg-slate-950/75 hover:bg-slate-900 border border-slate-800 p-2 sm:px-3 sm:py-2 rounded-2xl text-white shadow-xl flex items-center gap-1.5 transition-all cursor-pointer"
-          title={`Equipped: ${activeWeapon.name}. Click to switch.`}
-        >
-          <span className="text-base sm:text-lg">{activeWeapon.icon}</span>
-          <span className="text-xs font-bold text-slate-300 hidden md:inline">
-            {activeWeapon.name}
-          </span>
-          <RotateCcw className="w-3.5 h-3.5 text-amber-400 ml-0.5" />
-        </button>
 
         {/* Audio Toggle */}
         <button

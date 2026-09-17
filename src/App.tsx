@@ -10,7 +10,6 @@ import {
   UserProfile,
   WeaponType,
 } from "./types";
-import { CombatAnnouncer } from "./components/CombatAnnouncer";
 import { MinimalHud } from "./components/MinimalHud";
 import { LeaderboardModal } from "./components/LeaderboardModal";
 import { ShareModal } from "./components/ShareModal";
@@ -80,9 +79,13 @@ export default function App() {
   const [eliminationNotification, setEliminationNotification] = useState<EliminationNotification | null>(null);
   const [floatingReactions, setFloatingReactions] = useState<SpectatorReaction[]>([]);
   const wsRef = useRef<WebSocket | null>(null);
+  const connectingPromiseRef = useRef<Promise<WebSocket> | null>(null);
+  const [multiplayerError, setMultiplayerError] = useState<string | null>(null);
+  const [connectionStatus, setConnectionStatus] = useState<"connecting" | "connected" | "disconnected">("disconnected");
+  const [urlJoinCode, setUrlJoinCode] = useState<string>("");
 
-  // Progressive Speed Multiplier: increases slowly as bugs are squashed
-  const speedMultiplier = 1.0 + Math.min(stats.kills * 0.025, 2.8);
+  // Simple constant speedMultiplier (no progressive speed ramp-up during gameplay)
+  const speedMultiplier = 1.0;
 
   // Cross-device User Profile
   const [profile, setProfile] = useState<UserProfile>(() => {
@@ -122,6 +125,8 @@ export default function App() {
     const params = new URLSearchParams(window.location.search);
     const roomFromUrl = params.get("room");
     if (roomFromUrl) {
+      const cleanCode = roomFromUrl.trim().toUpperCase();
+      setUrlJoinCode(cleanCode);
       setPlayMode("room");
       setShowMultiplayerLobby(true);
     }
@@ -189,110 +194,210 @@ export default function App() {
     });
   }, []);
 
-  // Setup WebSocket message listener when ws is connected
-  useEffect(() => {
-    const ws = wsRef.current;
-    if (!ws) return;
+  // Connect or return pre-connected WebSocket and attach persistent listener
+  const getSocket = useCallback((): Promise<WebSocket> => {
+    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+      setConnectionStatus("connected");
+      return Promise.resolve(wsRef.current);
+    }
+    if (connectingPromiseRef.current) {
+      return connectingPromiseRef.current;
+    }
 
-    const handleMessage = (event: MessageEvent) => {
-      try {
-        const data = JSON.parse(event.data);
-        const { type } = data;
+    setConnectionStatus("connecting");
+    const promise = new Promise<WebSocket>((resolve, reject) => {
+      const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+      const wsUrl = `${protocol}//${window.location.host}/ws`;
+      const ws = new WebSocket(wsUrl);
+      wsRef.current = ws;
 
-        if (type === "room_created") {
-          setActiveRoom(data.room);
-          setMyPlayerId(data.playerId);
-        } else if (type === "room_joined") {
-          setActiveRoom(data.room);
-          setMyPlayerId(data.playerId);
-          if (data.joinedAsSpectator) {
-            setIsSpectating(true);
-            setShowMultiplayerLobby(false);
-            startRound();
-          }
-        } else if (type === "room_updated" || type === "player_joined" || type === "player_left") {
-          setActiveRoom(data.room);
-        } else if (type === "match_started") {
-          setActiveRoom(data.room);
-          setShowMultiplayerLobby(false);
-          setShowRoomLeaderboard(false);
-          setIsSpectating(false);
-          startRound();
-        } else if (type === "player_eliminated") {
-          setActiveRoom(data.room);
-          playPlayerEliminatedSound();
-
-          // Show floating knockout alert notification
-          setEliminationNotification({
-            id: Math.random().toString(),
-            playerId: data.eliminatedPlayerId,
-            playerName: data.playerName,
-            rank: data.rank,
-            remainingAlive: data.remainingAlive,
-            timestamp: Date.now(),
-          });
-
-          // Auto-hide alert after 4.5 seconds
-          setTimeout(() => {
-            setEliminationNotification((current) =>
-              current?.playerId === data.eliminatedPlayerId ? null : current
-            );
-          }, 4500);
-
-          // If current local player was eliminated, switch into Spectator Mode!
-          if (data.eliminatedPlayerId === myPlayerId) {
-            setIsSpectating(true);
-            const remaining = (data.room?.players as MultiplayerPlayer[])?.filter(
-              (p) => p.status === "alive" && p.id !== myPlayerId
-            );
-            if (remaining && remaining.length > 0) {
-              setSpectatingTargetId(remaining[0].id);
-            }
-          }
-        } else if (type === "player_life_updated") {
-          setActiveRoom(data.room);
-        } else if (type === "spectator_reaction_received") {
-          playCheerSound();
-          const reaction: SpectatorReaction = {
-            id: data.id || Math.random().toString(),
-            fromName: data.fromName || "Spectator",
-            emoji: data.emoji || "👏",
-            x: 20 + Math.random() * 60,
-            y: 80,
-            timestamp: Date.now(),
-          };
-          setFloatingReactions((prev) => [...prev, reaction]);
-          setTimeout(() => {
-            setFloatingReactions((prev) => prev.filter((r) => r.id !== reaction.id));
-          }, 2000);
-        } else if (type === "match_ended") {
-          setActiveRoom(data.room);
-          setShowRoomLeaderboard(true);
-          playVictoryFanfare();
-        } else if (type === "lobby_restarted") {
-          setActiveRoom(data.room);
-          setShowRoomLeaderboard(false);
-          setIsSpectating(false);
-          setShowMultiplayerLobby(true);
-          playNotificationPing();
+      const connectionTimeout = setTimeout(() => {
+        if (ws.readyState !== WebSocket.OPEN) {
+          try {
+            ws.close();
+          } catch {}
+          connectingPromiseRef.current = null;
+          setConnectionStatus("disconnected");
+          reject(new Error("Connection timeout"));
         }
-      } catch (err) {
-        console.error("WS error:", err);
-      }
-    };
+      }, 7000);
 
-    ws.addEventListener("message", handleMessage);
-    return () => {
-      ws.removeEventListener("message", handleMessage);
-    };
+      ws.onopen = () => {
+        clearTimeout(connectionTimeout);
+        connectingPromiseRef.current = null;
+        setConnectionStatus("connected");
+        resolve(ws);
+      };
+
+      ws.onmessage = (event: MessageEvent) => {
+        try {
+          const data = JSON.parse(event.data);
+          const { type } = data;
+
+          if (type === "pong") {
+            // Heartbeat received
+            return;
+          }
+
+          if (type === "error") {
+            console.warn("Multiplayer server error:", data.message);
+            setMultiplayerError(data.message || "Multiplayer server error. Please try again.");
+            return;
+          }
+
+          if (type === "room_created") {
+            setMultiplayerError(null);
+            setActiveRoom(data.room);
+            setMyPlayerId(data.playerId);
+            if (data.room?.roomWeapon) {
+              setSelectedWeapon(data.room.roomWeapon);
+            }
+          } else if (type === "room_joined") {
+            setMultiplayerError(null);
+            setActiveRoom(data.room);
+            setMyPlayerId(data.playerId);
+            if (data.room?.roomWeapon) {
+              setSelectedWeapon(data.room.roomWeapon);
+            }
+            if (data.joinedAsSpectator) {
+              setIsSpectating(true);
+              setShowMultiplayerLobby(false);
+              startRound();
+            }
+          } else if (type === "room_updated" || type === "player_joined" || type === "player_left") {
+            setActiveRoom(data.room);
+            if (data.room?.roomWeapon) {
+              setSelectedWeapon(data.room.roomWeapon);
+            }
+          } else if (type === "match_started") {
+            setActiveRoom(data.room);
+            if (data.room?.roomWeapon) {
+              setSelectedWeapon(data.room.roomWeapon);
+            }
+            setShowMultiplayerLobby(false);
+            setShowRoomLeaderboard(false);
+            setIsSpectating(false);
+            startRound();
+          } else if (type === "player_eliminated") {
+            setActiveRoom(data.room);
+            playPlayerEliminatedSound();
+
+            setEliminationNotification({
+              id: Math.random().toString(),
+              playerId: data.eliminatedPlayerId,
+              playerName: data.playerName,
+              rank: data.rank,
+              remainingAlive: data.remainingAlive,
+              timestamp: Date.now(),
+            });
+
+            setTimeout(() => {
+              setEliminationNotification((current) =>
+                current?.playerId === data.eliminatedPlayerId ? null : current
+              );
+            }, 4500);
+
+            if (data.eliminatedPlayerId === myPlayerId) {
+              setIsSpectating(true);
+              const remaining = (data.room?.players as MultiplayerPlayer[])?.filter(
+                (p) => p.status === "alive" && p.id !== myPlayerId
+              );
+              if (remaining && remaining.length > 0) {
+                setSpectatingTargetId(remaining[0].id);
+              }
+            }
+          } else if (type === "player_life_updated") {
+            setActiveRoom(data.room);
+          } else if (type === "spectator_reaction_received") {
+            playCheerSound();
+            const reaction: SpectatorReaction = {
+              id: data.id || Math.random().toString(),
+              fromName: data.fromName || "Spectator",
+              emoji: data.emoji || "👏",
+              x: 20 + Math.random() * 60,
+              y: 80,
+              timestamp: Date.now(),
+            };
+            setFloatingReactions((prev) => [...prev, reaction]);
+            setTimeout(() => {
+              setFloatingReactions((prev) => prev.filter((r) => r.id !== reaction.id));
+            }, 2000);
+          } else if (type === "match_ended") {
+            setActiveRoom(data.room);
+            setShowRoomLeaderboard(true);
+            playVictoryFanfare();
+          } else if (type === "lobby_restarted") {
+            setActiveRoom(data.room);
+            if (data.room?.roomWeapon) {
+              setSelectedWeapon(data.room.roomWeapon);
+            }
+            setShowRoomLeaderboard(false);
+            setIsSpectating(false);
+            setShowMultiplayerLobby(true);
+            playNotificationPing();
+          }
+        } catch (err) {
+          console.error("WS message parse error:", err);
+        }
+      };
+
+      ws.onerror = (err) => {
+        clearTimeout(connectionTimeout);
+        connectingPromiseRef.current = null;
+        setConnectionStatus("disconnected");
+        console.warn("Multiplayer WS error:", err);
+        reject(err);
+      };
+
+      ws.onclose = () => {
+        clearTimeout(connectionTimeout);
+        connectingPromiseRef.current = null;
+        setConnectionStatus("disconnected");
+        wsRef.current = null;
+      };
+    });
+
+    connectingPromiseRef.current = promise;
+    return promise;
   }, [myPlayerId, startRound]);
+
+  // Pre-connect WebSocket as soon as App mounts so room creation is instant!
+  useEffect(() => {
+    getSocket().catch(() => {});
+  }, [getSocket]);
+
+  // Heartbeat ping every 10 seconds to keep connection alive through cloud proxies
+  useEffect(() => {
+    const pingTimer = setInterval(() => {
+      if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+        try {
+          wsRef.current.send(JSON.stringify({ type: "ping" }));
+        } catch {}
+      }
+    }, 10000);
+    return () => clearInterval(pingTimer);
+  }, []);
+
+  // Back to Menu / Switch Mode Option
+  const handleBackToMenu = useCallback(() => {
+    setShowGameOver(false);
+    setShowWeaponSelect(false);
+    setShowLeaderboard(false);
+    setShowShare(false);
+    setShowMultiplayerLobby(false);
+    setShowRoomLeaderboard(false);
+    setIsSpectating(false);
+    setActiveRoom(null);
+    setMyPlayerId(null);
+    setPlayMode(null);
+  }, []);
 
   // Mode Selection handler
   const handleSelectMode = (mode: PlayModeChoice) => {
     setPlayMode(mode);
     if (mode === "single") {
       setShowMultiplayerLobby(false);
-      startRound();
+      setShowWeaponSelect(true);
     } else {
       setShowMultiplayerLobby(true);
     }
@@ -301,6 +406,7 @@ export default function App() {
   // Weapon selected
   const handleWeaponConfirmed = (weaponChoice: WeaponType) => {
     setSelectedWeapon(weaponChoice);
+    setProfile((prev) => ({ ...prev, selectedWeapon: weaponChoice }));
     setShowWeaponSelect(false);
 
     // If in multiplayer room, inform server
@@ -524,10 +630,7 @@ export default function App() {
         />
       )}
 
-      {/* 4. COMPACT COMBAT REMARKS */}
-      {!isSpectating && <CombatAnnouncer latestStrike={latestStrike} combo={stats.combo} />}
-
-      {/* 5. MINIMALIST FLOATING TOP HUD */}
+      {/* 4. MINIMALIST FLOATING TOP HUD */}
       {playMode !== null && !showWeaponSelect && !showMultiplayerLobby && !showRoomLeaderboard && !isSpectating && (
         <MinimalHud
           score={stats.score}
@@ -536,10 +639,9 @@ export default function App() {
           lives={lives}
           maxLives={MAX_LIVES}
           speedMultiplier={speedMultiplier}
-          weapon={selectedWeapon}
           soundEnabled={soundOn}
           onToggleSound={toggleSound}
-          onChangeWeapon={() => setShowWeaponSelect(true)}
+          onBackToMenu={handleBackToMenu}
           roomInfo={
             activeRoom
               ? {
@@ -576,10 +678,15 @@ export default function App() {
         playerName={profile.name}
         onStartMultiplayerMatch={() => {}}
         wsRef={wsRef}
+        getSocket={getSocket}
         activeRoom={activeRoom}
         setActiveRoom={setActiveRoom}
         myPlayerId={myPlayerId}
         setMyPlayerId={setMyPlayerId}
+        defaultJoinCode={urlJoinCode}
+        errorMessage={multiplayerError}
+        onClearError={() => setMultiplayerError(null)}
+        connectionStatus={connectionStatus}
       />
 
       {/* 8. WEAPON SELECTION & ANIMATION PREVIEW MODAL */}
@@ -589,6 +696,12 @@ export default function App() {
           highScore={profile.highScore}
           totalKills={profile.totalKills}
           onSelectAndStart={handleWeaponConfirmed}
+          onBack={() => {
+            setShowWeaponSelect(false);
+            if (playMode === "single" && stats.score === 0 && !stats.isGameOver && stats.kills === 0) {
+              setPlayMode(null);
+            }
+          }}
         />
       )}
 
@@ -621,6 +734,7 @@ export default function App() {
           setShowGameOver(false);
           setShowLeaderboard(true);
         }}
+        onBackToMenu={handleBackToMenu}
       />
 
       {/* 11. GLOBAL LEADERBOARD MODAL */}

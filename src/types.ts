@@ -133,6 +133,7 @@ export interface MultiplayerRoom {
   roomId: string;
   status: "waiting" | "starting" | "playing" | "ended";
   timeLeft: number;
+  roomWeapon?: WeaponType;
   players: MultiplayerPlayer[];
   winnerId?: string;
   winnerName?: string;
@@ -170,4 +171,13 @@ export interface OpponentAction {
   points: number;
   combo: number;
   timestamp: number;
+}
+
+export interface OpenRoomSummary {
+  id: string;
+  hostName: string;
+  playerCount: number;
+  maxPlayers: number;
+  roomWeapon: WeaponType;
+  createdAt: number;
 }

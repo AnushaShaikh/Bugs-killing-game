@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { WeaponType } from "../types";
 import { WEAPONS } from "../data/weapons";
-import { Check, Play, Zap, Crosshair, Sparkles, Trophy } from "lucide-react";
+import { Check, Play, Zap, Crosshair, Sparkles, Trophy, ArrowLeft } from "lucide-react";
 
 interface WeaponSelectScreenProps {
   onSelectAndStart: (weapon: WeaponType) => void;
   defaultWeapon?: WeaponType;
   highScore: number;
   totalKills: number;
+  onBack?: () => void;
 }
 
 export const WeaponSelectScreen: React.FC<WeaponSelectScreenProps> = ({
@@ -15,6 +16,7 @@ export const WeaponSelectScreen: React.FC<WeaponSelectScreenProps> = ({
   defaultWeapon = "shoe",
   highScore,
   totalKills,
+  onBack,
 }) => {
   const [chosenWeapon, setChosenWeapon] = useState<WeaponType>(defaultWeapon);
 
@@ -43,19 +45,32 @@ export const WeaponSelectScreen: React.FC<WeaponSelectScreenProps> = ({
 
         {/* Header Section */}
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 pb-5 border-b border-slate-800/80">
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-              <span className="px-2.5 py-0.5 rounded-full bg-slate-800 border border-slate-700/80 text-[11px] font-bold tracking-wider text-amber-400 uppercase">
-                Arsenal
-              </span>
-              <span className="text-xs text-slate-400">Step 1 of 1</span>
+          <div className="flex items-start gap-3">
+            {onBack && (
+              <button
+                type="button"
+                onClick={onBack}
+                id="weapon-select-back-btn"
+                className="mt-1 p-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 hover:text-white transition-all cursor-pointer flex items-center justify-center"
+                title="Back to Mode Selection"
+              >
+                <ArrowLeft className="w-5 h-5" />
+              </button>
+            )}
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <span className="px-2.5 py-0.5 rounded-full bg-slate-800 border border-slate-700/80 text-[11px] font-bold tracking-wider text-amber-400 uppercase">
+                  Arsenal
+                </span>
+                <span className="text-xs text-slate-400">Step 1 of 1</span>
+              </div>
+              <h1 className="text-xl sm:text-2xl font-black text-white tracking-tight">
+                Select Your Weapon
+              </h1>
+              <p className="text-xs sm:text-sm text-slate-400 mt-0.5">
+                Choose your pest control tool before entering the floor.
+              </p>
             </div>
-            <h1 className="text-xl sm:text-2xl font-black text-white tracking-tight">
-              Select Your Weapon
-            </h1>
-            <p className="text-xs sm:text-sm text-slate-400 mt-0.5">
-              Choose your pest control tool before entering the floor.
-            </p>
           </div>
 
           {/* Compact Record Tag */}

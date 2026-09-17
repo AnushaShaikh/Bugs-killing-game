@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import { GameStats, WeaponType } from "../types";
 import { WEAPONS } from "../data/weapons";
-import { Trophy, RefreshCw, Share2, Award, Zap, Crosshair } from "lucide-react";
+import { Trophy, RefreshCw, Share2, Award, Zap, Crosshair, ArrowLeft } from "lucide-react";
 import confetti from "canvas-confetti";
 
 interface GameOverModalProps {
@@ -13,6 +13,7 @@ interface GameOverModalProps {
   onChangeWeapon: () => void;
   onOpenShare: () => void;
   onOpenLeaderboard: () => void;
+  onBackToMenu?: () => void;
 }
 
 export const GameOverModal: React.FC<GameOverModalProps> = ({
@@ -24,6 +25,7 @@ export const GameOverModal: React.FC<GameOverModalProps> = ({
   onChangeWeapon,
   onOpenShare,
   onOpenLeaderboard,
+  onBackToMenu,
 }) => {
   useEffect(() => {
     if (isOpen) {
@@ -140,7 +142,7 @@ export const GameOverModal: React.FC<GameOverModalProps> = ({
             <button
               onClick={onOpenShare}
               id="open-share-from-gameover"
-              className="py-3 bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-700 rounded-xl font-extrabold text-xs uppercase tracking-wider transition-colors flex items-center justify-center gap-1.5 shadow-sm"
+              className="py-3 bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-700 rounded-xl font-extrabold text-xs uppercase tracking-wider transition-colors flex items-center justify-center gap-1.5 shadow-sm cursor-pointer"
             >
               <Share2 className="w-4 h-4" />
               <span>Share Score</span>
@@ -149,12 +151,23 @@ export const GameOverModal: React.FC<GameOverModalProps> = ({
             <button
               onClick={onOpenLeaderboard}
               id="open-leaderboard-from-gameover"
-              className="py-3 bg-amber-50 hover:bg-amber-100 border border-amber-200 text-amber-800 rounded-xl font-extrabold text-xs uppercase tracking-wider transition-colors flex items-center justify-center gap-1.5 shadow-sm"
+              className="py-3 bg-amber-50 hover:bg-amber-100 border border-amber-200 text-amber-800 rounded-xl font-extrabold text-xs uppercase tracking-wider transition-colors flex items-center justify-center gap-1.5 shadow-sm cursor-pointer"
             >
               <Trophy className="w-4 h-4" />
               <span>Leaderboard</span>
             </button>
           </div>
+
+          {onBackToMenu && (
+            <button
+              onClick={onBackToMenu}
+              id="open-mode-select-from-gameover"
+              className="w-full py-3 bg-indigo-600 hover:bg-indigo-500 active:scale-[0.99] text-white rounded-xl font-black text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md shadow-indigo-600/30"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              <span>Main Menu / Switch to Multiplayer</span>
+            </button>
+          )}
         </div>
       </div>
     </div>

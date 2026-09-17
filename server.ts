@@ -63,7 +63,9 @@ interface Room {
   winnerId?: string;
   winnerName?: string;
   totalStartedPlayers?: number;
+  roomWeapon: "shoe" | "newspaper" | "swatter";
   roundTimer?: NodeJS.Timeout;
+  emptyCleanupTimer?: NodeJS.Timeout;
 }
 
 const rooms = new Map<string, Room>();
@@ -121,6 +123,54 @@ async function startServer() {
     res.json(profile);
   });
 
+  // Query active open rooms for 1-click joining
+  app.get("/api/multiplayer/rooms", (_req, res) => {
+    const openList = Array.from(rooms.values())
+      .filter((r) => r.status === "waiting" && r.players.size < 12)
+      .map((r) => {
+        const host = Array.from(r.players.values()).find((p) => p.isHost);
+        return {
+          id: r.id,
+          hostName: host?.name || "Host",
+          playerCount: r.players.size,
+          maxPlayers: 12,
+          roomWeapon: r.roomWeapon || "shoe",
+          createdAt: Date.now(),
+        };
+      });
+    res.json(openList);
+  });
+
+  // Query specific room status via REST (fallback)
+  app.get("/api/multiplayer/room/:roomId", (req, res) => {
+    const rId = String(req.params.roomId || "").trim().toUpperCase();
+    const room = rooms.get(rId);
+    if (!room) {
+      return res.status(404).json({ error: "Room not found" });
+    }
+    const playersList = Array.from(room.players.values()).map((p) => ({
+      id: p.id,
+      name: p.name,
+      weapon: p.weapon,
+      score: p.score,
+      kills: p.kills,
+      combo: p.combo,
+      lives: p.lives,
+      maxLives: p.maxLives,
+      status: p.status,
+      eliminationRank: p.eliminationRank,
+      ready: p.ready,
+      isHost: p.isHost,
+    }));
+    res.json({
+      roomId: room.id,
+      status: room.status,
+      timeLeft: room.timeLeft,
+      roomWeapon: room.roomWeapon,
+      players: playersList,
+    });
+  });
+
   app.post("/api/sync", (req, res) => {
     const { syncKey, name, totalKills, highScore, selectedWeapon, unlockedBadges, gamesPlayed } = req.body;
     const key = (syncKey ? String(syncKey) : Math.random().toString(36).substring(2, 8)).toUpperCase();
@@ -154,6 +204,15 @@ async function startServer() {
   wss.on("connection", (ws: WebSocket) => {
     let currentRoomId: string | null = null;
     let playerId: string | null = null;
+    (ws as any).isAlive = true;
+
+    ws.on("pong", () => {
+      (ws as any).isAlive = true;
+    });
+
+    ws.on("error", (err) => {
+      console.warn("WebSocket client error:", err.message);
+    });
 
     const send = (type: string, payload: any) => {
       if (ws.readyState === WebSocket.OPEN) {
@@ -208,6 +267,7 @@ async function startServer() {
         roomId: room.id,
         status: room.status,
         timeLeft: room.timeLeft,
+        roomWeapon: room.roomWeapon || "shoe",
         winnerId: room.winnerId,
         winnerName: room.winnerName,
         totalStartedPlayers: room.totalStartedPlayers ?? room.players.size,
@@ -220,17 +280,24 @@ async function startServer() {
         const data = JSON.parse(raw.toString());
         const { type } = data;
 
+        if (type === "ping") {
+          send("pong", { timestamp: Date.now() });
+          return;
+        }
+
         if (type === "create_room") {
           const roomId = Math.random().toString(36).substring(2, 7).toUpperCase();
           const pId = Math.random().toString(36).substring(2, 9);
           playerId = pId;
           currentRoomId = roomId;
 
+          const chosenWeapon = ["shoe", "newspaper", "swatter"].includes(data.weapon) ? data.weapon : "shoe";
+
           const player: RoomPlayer = {
             id: pId,
             ws,
             name: data.name ? String(data.name).slice(0, 14) : "Player 1",
-            weapon: data.weapon || "shoe",
+            weapon: chosenWeapon,
             score: 0,
             kills: 0,
             combo: 0,
@@ -248,6 +315,7 @@ async function startServer() {
             players: new Map([[pId, player]]),
             status: "waiting",
             timeLeft: 999,
+            roomWeapon: chosenWeapon,
           };
           rooms.set(roomId, newRoom);
 
@@ -257,28 +325,44 @@ async function startServer() {
             room: getRoomSummary(newRoom),
           });
         } else if (type === "join_room") {
-          const targetRoomId = String(data.roomId || "").trim().toUpperCase();
+          const targetRoomId = String(data.roomId || "").replace(/\s+/g, "").toUpperCase();
           const room = rooms.get(targetRoomId);
 
           if (!room) {
-            return send("error", { message: `Room "${targetRoomId}" was not found. Check the code and try again!` });
+            return send("error", {
+              code: "ROOM_NOT_FOUND",
+              message: `Room "${targetRoomId}" was not found. Please verify the code or pick an active room from the list!`,
+            });
           }
           if (room.players.size >= 12) {
-            return send("error", { message: `Room ${targetRoomId} is full (maximum 12 players allowed)` });
+            return send("error", {
+              code: "ROOM_FULL",
+              message: `Room "${targetRoomId}" is currently full (12/12 players).`,
+            });
+          }
+
+          // Cancel any pending empty-room purge timer
+          if (room.emptyCleanupTimer) {
+            clearTimeout(room.emptyCleanupTimer);
+            room.emptyCleanupTimer = undefined;
           }
 
           const pId = Math.random().toString(36).substring(2, 9);
           playerId = pId;
           currentRoomId = targetRoomId;
 
+          // All players in the room inherit the host's selected weapon!
+          const hostWeapon = room.roomWeapon || "shoe";
+
           // If match is already in progress, join as spectator
           const isOngoing = room.status === "playing";
+          const needsHost = room.players.size === 0 || !Array.from(room.players.values()).some((p) => p.isHost);
 
           const player: RoomPlayer = {
             id: pId,
             ws,
             name: data.name ? String(data.name).slice(0, 14) : `Player ${room.players.size + 1}`,
-            weapon: data.weapon || "shoe",
+            weapon: hostWeapon,
             score: 0,
             kills: 0,
             combo: 0,
@@ -288,7 +372,7 @@ async function startServer() {
             eliminationRank: isOngoing ? room.players.size + 1 : null,
             eliminatedAt: isOngoing ? Date.now() : null,
             ready: true,
-            isHost: false,
+            isHost: needsHost,
           };
 
           room.players.set(pId, player);
@@ -308,8 +392,14 @@ async function startServer() {
           const room = rooms.get(currentRoomId);
           if (!room) return;
           const player = room.players.get(playerId);
-          if (player && data.weapon) {
-            player.weapon = data.weapon;
+          
+          // The host always selects the weapon and ALL players in the room use it!
+          if (player && player.isHost && data.weapon) {
+            const validWeapon = ["shoe", "newspaper", "swatter"].includes(data.weapon) ? data.weapon : "shoe";
+            room.roomWeapon = validWeapon;
+            room.players.forEach((p) => {
+              p.weapon = validWeapon;
+            });
             broadcastToRoom(currentRoomId, "room_updated", {
               room: getRoomSummary(room),
             });
@@ -324,7 +414,9 @@ async function startServer() {
           room.winnerName = undefined;
           room.totalStartedPlayers = room.players.size;
 
+          const hostWeapon = room.roomWeapon || "shoe";
           room.players.forEach((p) => {
+            p.weapon = hostWeapon;
             p.score = 0;
             p.kills = 0;
             p.combo = 0;
@@ -452,7 +544,9 @@ async function startServer() {
           room.status = "waiting";
           room.winnerId = undefined;
           room.winnerName = undefined;
+          const hostWeapon = room.roomWeapon || "shoe";
           room.players.forEach((p) => {
+            p.weapon = hostWeapon;
             p.score = 0;
             p.kills = 0;
             p.combo = 0;
@@ -482,7 +576,16 @@ async function startServer() {
 
           if (room.players.size === 0) {
             if (room.roundTimer) clearInterval(room.roundTimer);
-            rooms.delete(currentRoomId);
+            // Provide a 5-minute grace period before cleaning up the empty room
+            if (room.emptyCleanupTimer) clearTimeout(room.emptyCleanupTimer);
+            const rId = currentRoomId;
+            room.emptyCleanupTimer = setTimeout(() => {
+              const checkRoom = rooms.get(rId);
+              if (checkRoom && checkRoom.players.size === 0) {
+                rooms.delete(rId);
+                console.log(`Cleaned up empty room ${rId} after grace period`);
+              }
+            }, 300000); // 5 minutes grace period
           } else {
             // If the host left, assign new host to the first player
             const remainingPlayers = Array.from(room.players.values());
@@ -533,6 +636,21 @@ async function startServer() {
       res.sendFile(path.join(distPath, "index.html"));
     });
   }
+
+  // Periodic heartbeat interval to keep cloud reverse proxy connections alive
+  const heartbeatTimer = setInterval(() => {
+    wss.clients.forEach((clientWs) => {
+      if ((clientWs as any).isAlive === false) {
+        return clientWs.terminate();
+      }
+      (clientWs as any).isAlive = false;
+      clientWs.ping();
+    });
+  }, 15000);
+
+  wss.on("close", () => {
+    clearInterval(heartbeatTimer);
+  });
 
   server.listen(PORT, "0.0.0.0", () => {
     console.log(`Server with WebSockets running at http://0.0.0.0:${PORT}`);
