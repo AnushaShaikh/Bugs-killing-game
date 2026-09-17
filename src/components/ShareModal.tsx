@@ -66,77 +66,73 @@ export const ShareModal: React.FC<ShareModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="relative w-full max-w-md bg-white rounded-3xl shadow-2xl border-2 border-slate-200 overflow-hidden flex flex-col">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-150 select-none">
+      <div className="relative w-full max-w-md bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col">
         {/* Header */}
-        <div className="p-4 bg-gradient-to-r from-rose-500 to-pink-600 text-white flex items-center justify-between">
+        <div className="p-4 bg-white border-b border-slate-200 text-slate-900 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div className="p-2 bg-white/20 rounded-2xl">
-              <Share2 className="w-5 h-5 text-white" />
+            <div className="p-2 bg-slate-100 rounded-lg border border-slate-200">
+              <Share2 className="w-4 h-4 text-slate-700" />
             </div>
             <div>
-              <h2 className="text-lg font-black tracking-tight">Share Achievement</h2>
-              <p className="text-[11px] text-pink-100 font-medium">Challenge your friends</p>
+              <h2 className="text-base font-bold tracking-tight text-slate-900">Share Achievement</h2>
+              <p className="text-xs text-slate-500 font-normal">Challenge peers or record result</p>
             </div>
           </div>
           <button
             onClick={onClose}
             id="close-share-modal"
-            className="p-1.5 rounded-full hover:bg-white/20 transition-colors"
+            className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-700 transition-colors cursor-pointer"
           >
-            <X className="w-5 h-5 text-white" />
+            <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* Victory Card Preview */}
-        <div className="p-5 space-y-4">
-          <div className="relative bg-gradient-to-b from-amber-50 to-orange-50 border-2 border-amber-300 rounded-2xl p-5 text-center shadow-inner overflow-hidden">
-            {/* Background watermarks */}
-            <div className="absolute top-2 right-2 text-3xl opacity-20 select-none">🪰</div>
-            <div className="absolute bottom-2 left-2 text-3xl opacity-20 select-none">💥</div>
-
-            <div className="inline-flex items-center gap-1 px-3 py-1 bg-amber-200/80 rounded-full text-amber-900 text-[10px] font-black uppercase tracking-wider mb-2">
-              <Award className="w-3.5 h-3.5 text-amber-700" />
-              <span>Certified Bug Smasher</span>
+        <div className="p-4 sm:p-5 space-y-4">
+          <div className="relative bg-slate-50 border border-slate-200 rounded-xl p-5 text-center shadow-xs">
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-white border border-slate-200 rounded-md text-slate-600 text-[10px] font-semibold uppercase tracking-wider mb-2 shadow-xs">
+              <Award className="w-3.5 h-3.5 text-amber-500" />
+              <span>Score Certificate</span>
             </div>
 
-            <h3 className="text-xl font-black text-slate-900 leading-tight">
-              {playerName || "Hero Smasher"}
+            <h3 className="text-lg font-bold text-slate-900 leading-tight">
+              {playerName || "Player"}
             </h3>
 
-            {/* Big Score */}
+            {/* Score */}
             <div className="my-2">
-              <div className="text-4xl font-black text-amber-600 tracking-tight drop-shadow-sm">
+              <div className="text-3xl font-bold font-mono text-slate-900 tracking-tight">
                 {stats.score.toLocaleString()}
               </div>
-              <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
-                TOTAL POINTS
+              <span className="text-[10px] font-medium uppercase tracking-widest text-slate-400">
+                Total Score
               </span>
             </div>
 
             {/* Stats Grid */}
-            <div className="grid grid-cols-3 gap-2 pt-2 border-t border-amber-200/80 text-center">
+            <div className="grid grid-cols-3 gap-2 pt-3 border-t border-slate-200 text-center">
               <div>
-                <span className="text-xs font-black text-slate-800 block">
+                <span className="text-xs font-semibold font-mono text-slate-800 block">
                   {stats.kills}
                 </span>
-                <span className="text-[9px] text-slate-500 font-semibold uppercase">
-                  Squashed
+                <span className="text-[10px] text-slate-500 uppercase tracking-wider">
+                  Smashed
                 </span>
               </div>
               <div>
-                <span className="text-xs font-black text-slate-800 block">
+                <span className="text-xs font-semibold font-mono text-slate-800 block">
                   {stats.accuracy}%
                 </span>
-                <span className="text-[9px] text-slate-500 font-semibold uppercase">
+                <span className="text-[10px] text-slate-500 uppercase tracking-wider">
                   Accuracy
                 </span>
               </div>
               <div>
-                <span className="text-xs font-black text-slate-800 block flex items-center justify-center gap-1">
-                  <span>{activeWeapon.icon}</span>
+                <span className="text-xs font-semibold text-slate-800 block">
+                  {activeWeapon.name}
                 </span>
-                <span className="text-[9px] text-slate-500 font-semibold uppercase">
+                <span className="text-[10px] text-slate-500 uppercase tracking-wider">
                   Weapon
                 </span>
               </div>
@@ -149,10 +145,10 @@ export const ShareModal: React.FC<ShareModalProps> = ({
             <button
               onClick={handleNativeShare}
               id="native-share-button"
-              className="w-full py-3 bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-600 hover:to-pink-700 text-white rounded-2xl font-black text-xs uppercase tracking-wider transition-all shadow-md flex items-center justify-center gap-2"
+              className="w-full py-2.5 bg-amber-500 hover:bg-amber-600 active:scale-[0.99] text-white rounded-lg font-semibold text-xs uppercase tracking-wider transition-colors shadow-sm flex items-center justify-center gap-2 cursor-pointer"
             >
-              <Share2 className="w-4 h-4" />
-              <span>Share to Socials & Chat</span>
+              <Share2 className="w-3.5 h-3.5" />
+              <span>Share to Applications</span>
             </button>
 
             {/* Quick platform buttons */}
@@ -160,28 +156,28 @@ export const ShareModal: React.FC<ShareModalProps> = ({
               <button
                 onClick={shareToWhatsApp}
                 id="share-whatsapp-button"
-                className="py-2.5 px-3 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-700 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition-colors"
+                className="py-2 px-2.5 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 rounded-lg font-medium text-xs flex items-center justify-center gap-1.5 transition-colors cursor-pointer shadow-xs"
               >
-                <MessageCircle className="w-4 h-4" />
+                <MessageCircle className="w-3.5 h-3.5 text-slate-500" />
                 <span>WhatsApp</span>
               </button>
 
               <button
                 onClick={shareToTwitter}
                 id="share-twitter-button"
-                className="py-2.5 px-3 bg-sky-50 hover:bg-sky-100 border border-sky-200 text-sky-700 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition-colors"
+                className="py-2 px-2.5 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 rounded-lg font-medium text-xs flex items-center justify-center gap-1.5 transition-colors cursor-pointer shadow-xs"
               >
-                <Twitter className="w-4 h-4" />
-                <span>X / Twitter</span>
+                <Twitter className="w-3.5 h-3.5 text-slate-500" />
+                <span>X</span>
               </button>
 
               <button
                 onClick={copyShareText}
                 id="copy-share-text-button"
-                className="py-2.5 px-3 bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition-colors"
+                className="py-2 px-2.5 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 rounded-lg font-medium text-xs flex items-center justify-center gap-1.5 transition-colors cursor-pointer shadow-xs"
               >
-                {copied ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4" />}
-                <span>{copied ? "Copied!" : "Copy"}</span>
+                {copied ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5 text-slate-500" />}
+                <span>{copied ? "Copied" : "Copy"}</span>
               </button>
             </div>
           </div>
@@ -191,7 +187,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({
         <div className="p-3 bg-slate-50 border-t border-slate-200 text-center">
           <button
             onClick={onClose}
-            className="w-full py-2 rounded-xl bg-slate-900 text-white font-bold text-xs transition-colors"
+            className="w-full py-2 rounded-lg bg-white hover:bg-slate-100 text-slate-700 font-medium text-xs transition-colors border border-slate-200 cursor-pointer shadow-xs"
           >
             Close
           </button>

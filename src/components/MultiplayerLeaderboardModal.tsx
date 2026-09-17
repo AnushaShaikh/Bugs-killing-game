@@ -63,47 +63,45 @@ export const MultiplayerLeaderboardModal: React.FC<MultiplayerLeaderboardModalPr
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/85 backdrop-blur-md select-none overflow-y-auto animate-in fade-in duration-200">
-      <div className="relative w-full max-w-xl bg-slate-900 border-2 border-indigo-500/50 rounded-3xl shadow-2xl shadow-indigo-950/80 overflow-hidden flex flex-col my-auto max-h-[92vh]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/40 backdrop-blur-sm select-none overflow-y-auto animate-in fade-in duration-150">
+      <div className="relative w-full max-w-lg bg-white border border-slate-200 rounded-2xl shadow-2xl overflow-hidden flex flex-col my-auto max-h-[92vh]">
         {/* Header Banner */}
-        <div className="relative p-6 bg-gradient-to-r from-amber-600 via-yellow-500 to-amber-600 text-slate-950 text-center overflow-hidden">
-          <div className="absolute inset-0 opacity-15 bg-[radial-gradient(#fff_1px,transparent_1px)] [background-size:16px_16px]" />
-
-          <div className="relative z-10 flex flex-col items-center">
-            <div className="inline-flex p-3 rounded-full bg-slate-950/15 backdrop-blur-sm mb-2 text-slate-950">
-              <Crown className="w-8 h-8 fill-current text-slate-950 animate-bounce" />
+        <div className="relative p-5 bg-white border-b border-slate-200 text-slate-900 text-center">
+          <div className="flex flex-col items-center">
+            <div className="inline-flex p-2.5 rounded-xl bg-amber-50 border border-amber-200 mb-2 text-amber-600 shadow-xs">
+              <Crown className="w-6 h-6" />
             </div>
 
-            <span className="text-[11px] font-black uppercase tracking-widest text-slate-900/80">
-              MATCH FINAL STANDINGS
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+              Match Standings
             </span>
-            <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-950">
-              {isWinnerMe ? "YOU WON THE MATCH!" : `${winner?.name || "Winner"} Wins!`}
+            <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 mt-0.5">
+              {isWinnerMe ? "Victory — You Won The Match" : `${winner?.name || "Winner"} Won The Match`}
             </h2>
-            <p className="text-xs font-bold text-slate-900/90 mt-0.5">
-              🏆 Last Bug Hunter Standing in Room {room.roomId}
+            <p className="text-xs text-slate-500 mt-0.5">
+              Room {room.roomId} • Last Survivor
             </p>
           </div>
         </div>
 
         {/* Podium Top 3 (if 2+ players) */}
         {players.length >= 2 && (
-          <div className="p-4 sm:p-5 bg-slate-950/60 border-b border-slate-800 flex items-end justify-center gap-2 sm:gap-4 text-center">
+          <div className="p-3 sm:p-4 bg-slate-50 border-b border-slate-200 flex items-end justify-center gap-2 text-center">
             {/* 2nd Place */}
             {players[1] && (
               <div className="flex flex-col items-center w-24 sm:w-28">
-                <div className="text-xl sm:text-2xl mb-1">
+                <div className="text-lg mb-1">
                   {WEAPONS[players[1].weapon]?.icon || "👞"}
                 </div>
-                <div className="w-full bg-slate-800 border border-slate-700 rounded-t-xl p-2 h-20 flex flex-col justify-end">
-                  <div className="text-xs font-black text-slate-300 truncate">
+                <div className="w-full bg-white border border-slate-200 rounded-t-xl p-2 h-20 flex flex-col justify-end shadow-xs">
+                  <div className="text-xs font-semibold text-slate-800 truncate">
                     {players[1].name}
                   </div>
-                  <div className="text-[10px] text-slate-400 font-bold">
-                    {players[1].score.toLocaleString()} pts
+                  <div className="text-[10px] text-slate-500 font-mono">
+                    {players[1].score.toLocaleString()}
                   </div>
-                  <span className="text-[10px] font-black text-slate-400 mt-0.5">
-                    🥈 2nd
+                  <span className="text-[10px] font-medium text-slate-500 mt-0.5">
+                    2nd Place
                   </span>
                 </div>
               </div>
@@ -112,19 +110,19 @@ export const MultiplayerLeaderboardModal: React.FC<MultiplayerLeaderboardModalPr
             {/* 1st Place (Center, Tallest) */}
             {winner && (
               <div className="flex flex-col items-center w-28 sm:w-32">
-                <div className="text-2xl sm:text-3xl mb-1 relative">
-                  <Crown className="w-4 h-4 text-amber-400 fill-current absolute -top-2 left-1/2 -translate-x-1/2" />
+                <div className="text-2xl mb-1 relative">
+                  <Crown className="w-3.5 h-3.5 text-amber-500 fill-current absolute -top-1.5 left-1/2 -translate-x-1/2" />
                   {WEAPONS[winner.weapon]?.icon || "👞"}
                 </div>
-                <div className="w-full bg-gradient-to-t from-amber-500/30 to-amber-500/10 border-2 border-amber-400/60 rounded-t-2xl p-2.5 h-28 flex flex-col justify-end shadow-lg shadow-amber-500/10">
-                  <div className="text-xs sm:text-sm font-black text-amber-300 truncate">
+                <div className="w-full bg-amber-50/70 border border-amber-300 rounded-t-xl p-2.5 h-26 flex flex-col justify-end shadow-xs">
+                  <div className="text-xs sm:text-sm font-bold text-amber-900 truncate">
                     {winner.name}
                   </div>
-                  <div className="text-[10px] text-amber-200 font-bold">
-                    {winner.score.toLocaleString()} pts
+                  <div className="text-[10px] text-amber-700 font-mono">
+                    {winner.score.toLocaleString()}
                   </div>
-                  <span className="text-[11px] font-black text-amber-400 mt-0.5">
-                    🥇 1st Place
+                  <span className="text-[10px] font-semibold text-amber-700 mt-0.5">
+                    1st Place
                   </span>
                 </div>
               </div>
@@ -133,18 +131,18 @@ export const MultiplayerLeaderboardModal: React.FC<MultiplayerLeaderboardModalPr
             {/* 3rd Place */}
             {players[2] && (
               <div className="flex flex-col items-center w-24 sm:w-28">
-                <div className="text-xl sm:text-2xl mb-1">
+                <div className="text-lg mb-1">
                   {WEAPONS[players[2].weapon]?.icon || "👞"}
                 </div>
-                <div className="w-full bg-slate-800 border border-slate-700 rounded-t-xl p-2 h-16 flex flex-col justify-end">
-                  <div className="text-xs font-black text-slate-300 truncate">
+                <div className="w-full bg-white border border-slate-200 rounded-t-xl p-2 h-16 flex flex-col justify-end shadow-xs">
+                  <div className="text-xs font-semibold text-slate-800 truncate">
                     {players[2].name}
                   </div>
-                  <div className="text-[10px] text-slate-400 font-bold">
-                    {players[2].score.toLocaleString()} pts
+                  <div className="text-[10px] text-slate-500 font-mono">
+                    {players[2].score.toLocaleString()}
                   </div>
-                  <span className="text-[10px] font-black text-amber-600 mt-0.5">
-                    🥉 3rd
+                  <span className="text-[10px] font-medium text-slate-500 mt-0.5">
+                    3rd Place
                   </span>
                 </div>
               </div>
@@ -153,13 +151,13 @@ export const MultiplayerLeaderboardModal: React.FC<MultiplayerLeaderboardModalPr
         )}
 
         {/* Complete Leaderboard Standings Table (All players 1 to 12) */}
-        <div className="p-4 sm:p-5 flex-1 overflow-y-auto space-y-2">
-          <div className="flex items-center justify-between text-[11px] font-bold text-slate-400 uppercase tracking-wider px-2">
-            <span>Standings ({players.length} Players)</span>
-            <span>Kills / Score</span>
+        <div className="p-3 sm:p-4 flex-1 overflow-y-auto space-y-1.5">
+          <div className="flex items-center justify-between text-[10px] font-medium text-slate-400 uppercase tracking-wider px-2">
+            <span>Rankings ({players.length} Players)</span>
+            <span>Score</span>
           </div>
 
-          <div className="space-y-1.5">
+          <div className="space-y-1">
             {players.map((p, idx) => {
               const rank = p.eliminationRank ?? idx + 1;
               const isMe = p.id === myPlayerId;
@@ -168,60 +166,60 @@ export const MultiplayerLeaderboardModal: React.FC<MultiplayerLeaderboardModalPr
               return (
                 <div
                   key={p.id}
-                  className={`p-3 rounded-2xl border flex items-center justify-between transition-all ${
+                  className={`p-2.5 rounded-xl border flex items-center justify-between transition-colors ${
                     isFirst
-                      ? "bg-amber-500/10 border-amber-500/50 text-white"
+                      ? "bg-amber-50/60 border-amber-200 text-slate-900 shadow-xs"
                       : isMe
-                      ? "bg-indigo-950/40 border-indigo-500/60 text-white"
-                      : "bg-slate-800/60 border-slate-700/60 text-slate-200"
+                      ? "bg-slate-100/90 border-slate-300 text-slate-900 shadow-xs"
+                      : "bg-white border-slate-200 text-slate-700"
                   }`}
                 >
                   {/* Left: Position Rank + Avatar + Name */}
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2.5">
                     <span
-                      className={`w-7 h-7 rounded-xl flex items-center justify-center font-black text-xs ${
+                      className={`w-6 h-6 rounded-md flex items-center justify-center font-mono font-bold text-xs ${
                         isFirst
-                          ? "bg-amber-400 text-slate-950 font-black shadow-sm"
+                          ? "bg-amber-100 text-amber-800 border border-amber-300"
                           : rank === 2
-                          ? "bg-slate-300 text-slate-900"
+                          ? "bg-slate-100 text-slate-700 border border-slate-300"
                           : rank === 3
-                          ? "bg-amber-700 text-amber-100"
-                          : "bg-slate-700/80 text-slate-300"
+                          ? "bg-amber-50 text-amber-700 border border-amber-200"
+                          : "bg-slate-50 text-slate-500 border border-slate-200"
                       }`}
                     >
                       {rank}
                     </span>
 
-                    <span className="text-xl">
+                    <span className="text-base">
                       {WEAPONS[p.weapon]?.icon || "👞"}
                     </span>
 
                     <div>
-                      <div className="flex items-center gap-1.5 text-xs font-black">
+                      <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-900">
                         <span>{p.name}</span>
                         {isMe && (
-                          <span className="text-[9px] font-black px-1.5 py-0.2 rounded bg-indigo-500 text-white">
+                          <span className="text-[9px] font-semibold px-1 py-0.2 rounded bg-amber-50 text-amber-700 border border-amber-200">
                             YOU
                           </span>
                         )}
                         {p.isHost && (
-                          <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-slate-700 text-slate-300">
+                          <span className="text-[9px] font-medium px-1 py-0.2 rounded bg-slate-100 text-slate-600 border border-slate-200">
                             HOST
                           </span>
                         )}
                       </div>
-                      <span className="text-[10px] text-slate-400 font-medium">
-                        {isFirst ? "🏆 Last Player Standing" : `Out (Rank #${rank})`}
+                      <span className="text-[10px] text-slate-500 font-normal">
+                        {isFirst ? "Last player standing" : `Eliminated (Rank #${rank})`}
                       </span>
                     </div>
                   </div>
 
                   {/* Right: Kills & Score */}
                   <div className="text-right">
-                    <div className="text-xs font-black text-amber-300">
+                    <div className="text-xs font-semibold font-mono text-slate-900">
                       {p.score.toLocaleString()} pts
                     </div>
-                    <span className="text-[10px] text-slate-400 font-medium">
+                    <span className="text-[10px] text-slate-500 font-normal">
                       {p.kills} squashes
                     </span>
                   </div>
@@ -232,21 +230,21 @@ export const MultiplayerLeaderboardModal: React.FC<MultiplayerLeaderboardModalPr
         </div>
 
         {/* Footer Actions */}
-        <div className="p-4 sm:p-5 bg-slate-950 border-t border-slate-800 flex flex-wrap items-center justify-between gap-3">
+        <div className="p-3 sm:p-4 bg-slate-50 border-t border-slate-200 flex flex-wrap items-center justify-between gap-2">
           <button
             onClick={handleShareResults}
-            className="px-3.5 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5"
+            className="px-3 py-1.5 bg-white hover:bg-slate-100 text-slate-700 rounded-lg text-xs font-medium transition-colors border border-slate-200 flex items-center gap-1.5 cursor-pointer shadow-xs"
           >
-            {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Share2 className="w-4 h-4" />}
-            <span>{copied ? "Copied!" : "Copy Standings"}</span>
+            {copied ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Share2 className="w-3.5 h-3.5 text-slate-500" />}
+            <span>{copied ? "Copied" : "Copy Results"}</span>
           </button>
 
           <div className="flex items-center gap-2">
             <button
               onClick={onExitToMenu}
-              className="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5"
+              className="px-3 py-1.5 bg-white hover:bg-slate-100 text-slate-700 rounded-lg text-xs font-medium transition-colors border border-slate-200 flex items-center gap-1.5 cursor-pointer shadow-xs"
             >
-              <Home className="w-4 h-4" />
+              <Home className="w-3.5 h-3.5 text-slate-500" />
               <span>Main Menu</span>
             </button>
 
@@ -254,14 +252,14 @@ export const MultiplayerLeaderboardModal: React.FC<MultiplayerLeaderboardModalPr
               <button
                 onClick={onRematch}
                 id="room-rematch-button"
-                className="px-5 py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-xl text-xs font-black tracking-wide uppercase transition-all shadow-lg shadow-amber-500/20 flex items-center gap-1.5"
+                className="px-4 py-1.5 bg-amber-500 hover:bg-amber-600 active:scale-[0.98] text-white rounded-lg text-xs font-semibold tracking-wide uppercase transition-colors flex items-center gap-1.5 cursor-pointer shadow-xs"
               >
-                <RotateCcw className="w-4 h-4" />
-                <span>Play Again (Lobby)</span>
+                <RotateCcw className="w-3.5 h-3.5" />
+                <span>Return to Lobby</span>
               </button>
             ) : (
-              <span className="text-xs text-slate-400 font-medium italic">
-                Waiting for host to start rematch...
+              <span className="text-xs text-slate-500 font-normal">
+                Waiting for host...
               </span>
             )}
           </div>

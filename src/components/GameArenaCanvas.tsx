@@ -391,7 +391,7 @@ export const GameArenaCanvas: React.FC<GameArenaCanvasProps> = ({
           if (dist < 20) {
             // Pick new realistic wandering point on the kitchen floor
             bug.targetX = width * 0.08 + Math.random() * (width * 0.84);
-            bug.targetY = height * 0.08 + Math.random() * (height * 0.84);
+            bug.targetY = height * 0.12 + Math.random() * (height * 0.78);
             bug.angle = Math.atan2(bug.targetY - bug.y, bug.targetX - bug.x) + Math.PI / 2;
           } else {
             const moveStep = bug.speed * currentSpeed * dt;
@@ -701,11 +701,13 @@ export const GameArenaCanvas: React.FC<GameArenaCanvasProps> = ({
 
 function drawTileFloor(ctx: CanvasRenderingContext2D, width: number, height: number) {
   const tileSize = 64;
+  // Matte studio ceramic base (light, natural, professional)
   ctx.fillStyle = "#f8fafc";
   ctx.fillRect(0, 0, width, height);
 
-  ctx.strokeStyle = "rgba(226, 232, 240, 0.9)";
-  ctx.lineWidth = 1.5;
+  // Subtle clean grout grid (slate-200)
+  ctx.strokeStyle = "rgba(226, 232, 240, 0.75)";
+  ctx.lineWidth = 1;
 
   ctx.beginPath();
   for (let x = 0; x <= width; x += tileSize) {
@@ -718,17 +720,31 @@ function drawTileFloor(ctx: CanvasRenderingContext2D, width: number, height: num
   }
   ctx.stroke();
 
-  // Ambient Vignette
+  // Subtle interior tile edge highlight for depth
+  ctx.strokeStyle = "rgba(255, 255, 255, 0.7)";
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  for (let x = 1; x <= width; x += tileSize) {
+    ctx.moveTo(x, 0);
+    ctx.lineTo(x, height);
+  }
+  for (let y = 1; y <= height; y += tileSize) {
+    ctx.moveTo(0, y);
+    ctx.lineTo(width, y);
+  }
+  ctx.stroke();
+
+  // Clean soft ambient lighting vignette
   const grad = ctx.createRadialGradient(
     width / 2,
     height / 2,
-    Math.min(width, height) * 0.35,
+    Math.min(width, height) * 0.4,
     width / 2,
     height / 2,
-    Math.max(width, height) * 0.85
+    Math.max(width, height) * 0.95
   );
-  grad.addColorStop(0, "rgba(0, 0, 0, 0)");
-  grad.addColorStop(1, "rgba(15, 23, 42, 0.12)");
+  grad.addColorStop(0, "rgba(255, 255, 255, 0.2)");
+  grad.addColorStop(1, "rgba(15, 23, 42, 0.04)");
   ctx.fillStyle = grad;
   ctx.fillRect(0, 0, width, height);
 }

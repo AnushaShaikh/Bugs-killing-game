@@ -633,7 +633,7 @@ export default function App() {
   const isHost = activeRoom?.players.find((p) => p.id === myPlayerId)?.isHost ?? false;
 
   return (
-    <div className="relative w-screen h-screen overflow-hidden bg-slate-950 select-none">
+    <div className="relative w-screen h-screen overflow-hidden bg-slate-100 select-none">
       {/* 1. SEAMLESS HARDWARE-ACCELERATED ARENA CANVAS */}
       <main id="bug-smash-arena" className="absolute inset-0 w-full h-full touch-none">
         <GameArenaCanvas
@@ -651,12 +651,12 @@ export default function App() {
 
         {/* Fever Mode Glow Border */}
         {stats.feverActive && !isSpectating && (
-          <div className="absolute inset-0 pointer-events-none border-4 border-amber-500/80 animate-pulse" />
+          <div className="absolute inset-0 pointer-events-none border-2 border-amber-400/60 shadow-[inset_0_0_24px_rgba(245,158,11,0.15)] animate-pulse" />
         )}
 
         {/* Miss Red Flash Border */}
         {missAlert && !isSpectating && (
-          <div className="absolute inset-0 pointer-events-none border-8 border-red-600/90 bg-red-600/10 transition-opacity" />
+          <div className="absolute inset-0 pointer-events-none border-4 border-rose-500/80 bg-rose-500/10 transition-opacity" />
         )}
       </main>
 

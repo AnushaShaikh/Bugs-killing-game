@@ -40,112 +40,114 @@ export const MinimalHud: React.FC<MinimalHudProps> = ({
 }) => {
 
   return (
-    <div className="absolute top-0 left-0 right-0 z-30 pointer-events-none p-3 sm:p-4 flex items-start justify-between">
-      {/* Top Left: Compact High-Contrast Score + Room Indicator + Back to Menu Button */}
-      <div className="pointer-events-auto flex items-center gap-2">
+    <div className="absolute top-0 left-0 right-0 z-30 pointer-events-none pt-2 pb-1 px-2 sm:pt-3 sm:px-4 flex items-center justify-between gap-2 select-none">
+      {/* 1. Top Left: Menu Button */}
+      <div className="pointer-events-auto flex items-center gap-1.5 shrink-0">
         {onBackToMenu && (
           <button
             type="button"
             onClick={onBackToMenu}
             id="hud-back-to-menu-btn"
-            className="bg-slate-950/85 hover:bg-slate-900 border border-slate-700 hover:border-indigo-400 px-3 py-1.5 sm:py-2 rounded-2xl text-slate-200 hover:text-white shadow-xl flex items-center gap-1.5 transition-all cursor-pointer font-black text-xs group"
-            title="Back to Game Mode Selection (Switch to Multiplayer)"
+            className="bg-white/90 hover:bg-white active:bg-slate-100 border border-slate-200/90 h-8 sm:h-9 px-2 sm:px-2.5 rounded-lg text-slate-700 hover:text-slate-900 shadow-xs flex items-center gap-1.5 transition-colors cursor-pointer text-xs font-medium backdrop-blur-md"
+            title="Return to Menu"
           >
-            <ArrowLeft className="w-4 h-4 text-indigo-400 group-hover:-translate-x-0.5 transition-transform" />
+            <ArrowLeft className="w-3.5 h-3.5 text-slate-600 shrink-0" />
             <span className="hidden sm:inline">Menu</span>
           </button>
         )}
+      </div>
 
-        <div className="bg-slate-950/80 backdrop-blur-md px-3 py-1.5 rounded-2xl border border-slate-800 text-white shadow-xl flex items-center gap-2 sm:gap-2.5">
-          <div className="flex items-center gap-1.5">
-            <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">
-              SCORE
+      {/* 2. Top Center: Unified Score, Kills, and Mode Pill */}
+      <div className="pointer-events-auto flex items-center gap-1.5 shrink min-w-0">
+        <div className="bg-white/90 backdrop-blur-md h-8 sm:h-9 px-2.5 sm:px-3.5 rounded-lg border border-slate-200/90 text-slate-700 shadow-xs flex items-center gap-2 sm:gap-3 text-xs">
+          {/* Score */}
+          <div className="flex items-center gap-1">
+            <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider hidden sm:inline">
+              Score
             </span>
-            <span className="text-base sm:text-lg font-black text-amber-400 tracking-tight">
+            <span className="text-xs sm:text-sm font-bold text-slate-900 tabular-nums tracking-tight">
               {score.toLocaleString()}
             </span>
           </div>
 
-          <div className="h-3.5 w-px bg-slate-800" />
+          <div className="h-3 w-px bg-slate-200 shrink-0" />
 
-          <div className="flex items-center gap-1 text-xs font-bold text-slate-300" title={`${kills} bugs squashed`}>
-            <span>🐛</span>
-            <span>{kills}</span>
+          {/* Kills */}
+          <div className="flex items-center gap-1 text-[11px] sm:text-xs text-slate-600" title={`${kills} pests eliminated`}>
+            <span className="text-slate-400 font-medium text-[10px] hidden sm:inline">Kills</span>
+            <span className="font-semibold text-slate-900 tabular-nums">{kills}</span>
+            <span className="text-[10px] text-slate-400 sm:hidden">k</span>
           </div>
-        </div>
 
-        {/* Difficulty Badge */}
-        <div
-          className={`backdrop-blur-md px-2.5 py-1.5 rounded-2xl border shadow-xl flex items-center gap-1.5 text-xs font-black uppercase tracking-wider ${
-            difficulty === "expert"
-              ? "bg-rose-950/80 border-rose-600/70 text-rose-300"
-              : difficulty === "hard"
-              ? "bg-amber-950/80 border-amber-500/70 text-amber-300"
-              : "bg-slate-950/80 border-slate-800 text-emerald-400"
-          }`}
-          title={
-            difficulty === "expert"
-              ? "Expert: 2.5x Speed, 2x Bugs, None Can Escape, Protect Butterflies!"
-              : difficulty === "hard"
-              ? "Hard: 1.75x Speed (+0.75), Protect Butterflies (-1 life if killed)!"
-              : "Easy: Standard Game"
-          }
-        >
-          <span>{difficulty === "expert" ? "🔥" : difficulty === "hard" ? "⚡" : "🟢"}</span>
-          <span>{difficulty}</span>
-          {difficulty !== "easy" && <span className="text-[10px] text-amber-300/80 normal-case">🦋 safe</span>}
-        </div>
+          <div className="h-3 w-px bg-slate-200 shrink-0" />
 
-        {/* Room Info Badge (If in a multiplayer room) */}
-        {roomInfo && (
-          <div className="bg-indigo-950/85 backdrop-blur-md px-3 py-1.5 rounded-2xl border border-indigo-500/40 text-white shadow-xl flex items-center gap-2 text-xs font-black">
-            <span className="text-indigo-300 uppercase text-[10px] tracking-wide">
-              ROOM: {roomInfo.roomId}
-            </span>
-            <div className="h-3 w-px bg-indigo-500/40" />
-            <span className="text-emerald-400 flex items-center gap-1 text-[11px]">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              {roomInfo.aliveCount}/{roomInfo.totalPlayers} Alive
-            </span>
+          {/* Difficulty indicator */}
+          <div
+            className={`flex items-center gap-1 text-[10px] font-semibold capitalize ${
+              difficulty === "expert"
+                ? "text-rose-600"
+                : difficulty === "hard"
+                ? "text-amber-600"
+                : "text-emerald-600"
+            }`}
+            title={`Difficulty: ${difficulty}`}
+          >
+            <span
+              className={`w-1.5 h-1.5 rounded-full shrink-0 ${
+                difficulty === "expert"
+                  ? "bg-rose-500"
+                  : difficulty === "hard"
+                  ? "bg-amber-500"
+                  : "bg-emerald-500"
+              }`}
+            />
+            <span className="hidden xs:inline sm:inline">{difficulty}</span>
           </div>
-        )}
+
+          {/* Room Info (if multiplayer) */}
+          {roomInfo && (
+            <>
+              <div className="h-3 w-px bg-slate-200 shrink-0" />
+              <div className="flex items-center gap-1 text-[10px] font-medium text-emerald-600">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+                <span>{roomInfo.aliveCount}/{roomInfo.totalPlayers}</span>
+              </div>
+            </>
+          )}
+        </div>
       </div>
 
       {/* Floating Penalty Notice Warning */}
       {penaltyNotice && (
-        <div className="absolute top-16 left-1/2 -translate-x-1/2 pointer-events-none z-50 animate-bounce">
-          <div className="bg-rose-600 text-white font-black px-4 py-2 rounded-2xl shadow-2xl border-2 border-rose-300 flex items-center gap-2 text-xs sm:text-sm tracking-wide uppercase">
-            <ShieldAlert className="w-5 h-5 text-amber-300 animate-pulse" />
+        <div className="absolute top-11 sm:top-13 left-1/2 -translate-x-1/2 pointer-events-none z-50 animate-in fade-in zoom-in-95 duration-150">
+          <div className="bg-white/95 text-rose-600 border border-rose-300 px-3 py-1 rounded-lg shadow-lg flex items-center gap-1.5 text-xs font-semibold tracking-wide backdrop-blur-sm">
+            <ShieldAlert className="w-3.5 h-3.5 text-rose-500 shrink-0" />
             <span>{penaltyNotice}</span>
           </div>
         </div>
       )}
 
-      {/* Top Right: Lives (Miss Indicator) & Controls */}
-      <div className="pointer-events-auto flex items-center gap-2">
-
-        {/* Lives / Misses Pill */}
+      {/* 3. Top Right: Lives & Audio Toggle */}
+      <div className="pointer-events-auto flex items-center gap-1.5 shrink-0">
+        {/* Lives Indicator */}
         <div
-          className={`bg-slate-950/80 backdrop-blur-md px-3 py-2 rounded-2xl border flex items-center gap-1.5 shadow-xl transition-all ${
+          className={`bg-white/90 backdrop-blur-md h-8 sm:h-9 px-2 sm:px-2.5 rounded-lg border flex items-center gap-1 sm:gap-1.5 shadow-xs transition-colors ${
             lives === 0
-              ? "border-rose-600 text-rose-300 bg-rose-950/80"
+              ? "border-rose-300 text-rose-600 bg-rose-50/90"
               : lives === 1
-              ? "border-rose-500 text-rose-400 animate-pulse bg-rose-950/50"
-              : "border-slate-800 text-slate-300"
+              ? "border-amber-300 text-amber-600 bg-amber-50/90"
+              : "border-slate-200/90 text-slate-600"
           }`}
-          title="Don't miss a bug! 3 Misses = Game Over"
+          title="Lives Remaining"
         >
-          <span className="text-[10px] font-black uppercase tracking-wider mr-1">
-            {lives === 0 ? "GAME OVER" : lives === 1 ? "LAST CHANCE" : "LIVES"}
-          </span>
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-0.5 sm:gap-1">
             {Array.from({ length: maxLives }).map((_, idx) => (
               <Heart
                 key={idx}
-                className={`w-4 h-4 transition-all ${
+                className={`w-3.5 h-3.5 transition-all ${
                   idx < lives
-                    ? "fill-rose-500 text-rose-500 scale-100 drop-shadow-[0_0_4px_rgba(244,63,94,0.7)]"
-                    : "fill-transparent text-slate-700 scale-90"
+                    ? "fill-rose-500 text-rose-500"
+                    : "fill-transparent text-slate-200"
                 }`}
               />
             ))}
@@ -157,13 +159,13 @@ export const MinimalHud: React.FC<MinimalHudProps> = ({
           type="button"
           onClick={onToggleSound}
           id="hud-sound-toggle-btn"
-          className="bg-slate-950/75 hover:bg-slate-900 border border-slate-800 p-2 sm:p-2.5 rounded-2xl text-slate-300 shadow-xl transition-all cursor-pointer"
+          className="bg-white/90 hover:bg-white active:bg-slate-100 border border-slate-200/90 h-8 sm:h-9 w-8 sm:w-9 rounded-lg text-slate-600 hover:text-slate-900 shadow-xs flex items-center justify-center transition-colors cursor-pointer backdrop-blur-md"
           title={soundEnabled ? "Mute" : "Unmute"}
         >
           {soundEnabled ? (
-            <Volume2 className="w-4 h-4 text-emerald-400" />
+            <Volume2 className="w-3.5 h-3.5 text-slate-700 shrink-0" />
           ) : (
-            <VolumeX className="w-4 h-4 text-slate-500" />
+            <VolumeX className="w-3.5 h-3.5 text-slate-400 shrink-0" />
           )}
         </button>
       </div>

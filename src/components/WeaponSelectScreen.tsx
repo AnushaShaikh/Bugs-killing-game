@@ -41,58 +41,55 @@ export const WeaponSelectScreen: React.FC<WeaponSelectScreenProps> = ({
   }, [chosenWeapon, chosenDifficulty, onSelectAndStart]);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-slate-950/80 backdrop-blur-md overflow-y-auto">
-      <div className="relative w-full max-w-3xl bg-slate-900 border border-slate-800 rounded-3xl shadow-2xl p-5 sm:p-7 text-white overflow-hidden animate-in fade-in zoom-in-95 duration-150 my-auto">
-        {/* Subtle Ambient Header Glow */}
-        <div className="absolute -top-16 left-1/2 -translate-x-1/2 w-96 h-32 bg-amber-500/10 blur-3xl pointer-events-none" />
-
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-slate-900/40 backdrop-blur-sm overflow-y-auto">
+      <div className="relative w-full max-w-3xl bg-white border border-slate-200 rounded-2xl shadow-2xl p-5 sm:p-6 text-slate-900 overflow-hidden my-auto">
         {/* Header Section */}
-        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 pb-5 border-b border-slate-800/80">
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 pb-4 border-b border-slate-200">
           <div className="flex items-start gap-3">
             {onBack && (
               <button
                 type="button"
                 onClick={onBack}
                 id="weapon-select-back-btn"
-                className="mt-1 p-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 hover:text-white transition-all cursor-pointer flex items-center justify-center"
+                className="mt-0.5 p-2 rounded-lg bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-700 transition-colors cursor-pointer flex items-center justify-center shadow-xs"
                 title="Back to Mode Selection"
               >
-                <ArrowLeft className="w-5 h-5" />
+                <ArrowLeft className="w-4 h-4" />
               </button>
             )}
             <div>
               <div className="flex items-center gap-2 mb-1">
-                <span className="px-2.5 py-0.5 rounded-full bg-slate-800 border border-slate-700/80 text-[11px] font-bold tracking-wider text-amber-400 uppercase">
-                  Arsenal
+                <span className="px-2 py-0.5 rounded bg-slate-100 border border-slate-200 text-[10px] font-semibold tracking-wider text-slate-600 uppercase">
+                  Loadout
                 </span>
-                <span className="text-xs text-slate-400">Step 1 of 1</span>
+                <span className="text-xs text-slate-500">Match Setup</span>
               </div>
-              <h1 className="text-xl sm:text-2xl font-black text-white tracking-tight">
-                Select Your Weapon
+              <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
+                Select Your Tool & Difficulty
               </h1>
-              <p className="text-xs sm:text-sm text-slate-400 mt-0.5">
-                Choose your pest control tool before entering the floor.
+              <p className="text-xs text-slate-500 mt-0.5">
+                Configure your equipment before starting the match.
               </p>
             </div>
           </div>
 
           {/* Compact Record Tag */}
-          <div className="flex items-center gap-3 bg-slate-950/60 border border-slate-800 px-3 py-1.5 rounded-xl text-xs self-start sm:self-auto">
-            <div className="flex items-center gap-1.5 text-slate-400">
-              <Trophy className="w-3.5 h-3.5 text-amber-400" />
+          <div className="flex items-center gap-3 bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-lg text-xs self-start sm:self-auto shadow-xs">
+            <div className="flex items-center gap-1.5 text-slate-500">
+              <Trophy className="w-3.5 h-3.5 text-amber-500" />
               <span>Best:</span>
-              <span className="font-bold text-slate-200">{highScore.toLocaleString()}</span>
+              <span className="font-semibold text-slate-800">{highScore.toLocaleString()}</span>
             </div>
-            <div className="w-px h-3 bg-slate-800" />
-            <div className="text-slate-400">
-              <span>Squashed:</span>{" "}
-              <span className="font-bold text-slate-200">{totalKills.toLocaleString()}</span>
+            <div className="w-px h-3 bg-slate-200" />
+            <div className="text-slate-500">
+              <span>Eliminated:</span>{" "}
+              <span className="font-semibold text-slate-800">{totalKills.toLocaleString()}</span>
             </div>
           </div>
         </div>
 
         {/* 3 Balanced Weapon Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5 mt-5">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-4">
           {weaponList.map((wId, index) => {
             const w = WEAPONS[wId];
             const isSelected = chosenWeapon === wId;
@@ -103,35 +100,35 @@ export const WeaponSelectScreen: React.FC<WeaponSelectScreenProps> = ({
                 type="button"
                 id={`weapon-card-${wId}`}
                 onClick={() => setChosenWeapon(wId)}
-                className={`relative flex flex-col text-left p-4 rounded-2xl border transition-all duration-150 cursor-pointer group ${
+                className={`relative flex flex-col text-left p-3.5 rounded-xl border transition-all cursor-pointer group shadow-xs ${
                   isSelected
-                    ? "bg-slate-800/90 border-amber-500/90 ring-2 ring-amber-500/30 shadow-lg shadow-amber-500/10"
-                    : "bg-slate-950/50 border-slate-800/90 hover:border-slate-700 hover:bg-slate-800/40 opacity-90 hover:opacity-100"
+                    ? "bg-amber-50/60 border-amber-400 ring-1 ring-amber-400"
+                    : "bg-slate-50 border-slate-200 hover:border-slate-300 hover:bg-slate-100/70"
                 }`}
               >
                 {/* Keyboard Shortcut & Selection Pill */}
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-[10px] font-bold text-slate-400 px-1.5 py-0.5 rounded bg-slate-900 border border-slate-800">
+                  <span className="text-[10px] font-medium text-slate-500 px-1.5 py-0.5 rounded bg-white border border-slate-200">
                     Key {index + 1}
                   </span>
 
                   <div
-                    className={`w-5 h-5 rounded-full flex items-center justify-center transition-all ${
+                    className={`w-4 h-4 rounded-full flex items-center justify-center transition-all ${
                       isSelected
-                        ? "bg-amber-500 text-slate-950 shadow-sm"
-                        : "border border-slate-700 bg-slate-900/80 group-hover:border-slate-500"
+                        ? "bg-amber-500 text-white"
+                        : "border border-slate-300 bg-white group-hover:border-slate-400"
                     }`}
                   >
-                    {isSelected && <Check className="w-3.5 h-3.5 stroke-[3]" />}
+                    {isSelected && <Check className="w-3 h-3 stroke-[3]" />}
                   </div>
                 </div>
 
                 {/* Custom SVG Weapon Illustration Canvas */}
                 <div
-                  className={`h-24 w-full rounded-xl flex items-center justify-center mb-3 transition-colors border ${
+                  className={`h-22 w-full rounded-lg flex items-center justify-center mb-2.5 transition-colors border ${
                     isSelected
-                      ? "bg-slate-900/90 border-slate-700/70"
-                      : "bg-slate-900/50 border-slate-800/50 group-hover:bg-slate-900/70"
+                      ? "bg-white border-amber-200"
+                      : "bg-white border-slate-200 group-hover:border-slate-300"
                   }`}
                 >
                   {wId === "shoe" && (
@@ -384,31 +381,30 @@ export const WeaponSelectScreen: React.FC<WeaponSelectScreenProps> = ({
 
                 {/* Weapon Title & Perk */}
                 <div className="space-y-1">
-                  <h2 className="text-base font-bold text-white tracking-tight leading-tight">
-                    {w.name}
-                  </h2>
-                  <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-500/10 border border-amber-500/30 text-amber-300 font-semibold text-[11px]">
-                    <Sparkles className="w-3 h-3 text-amber-400" />
-                    <span>{w.perk}</span>
+                  <div className="flex items-center justify-between">
+                    <h2 className="text-sm font-semibold text-slate-900 tracking-tight">
+                      {w.name}
+                    </h2>
+                    <span className="text-[10px] font-medium text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200">
+                      {w.perk}
+                    </span>
                   </div>
                 </div>
 
                 {/* Brief Tactical Description */}
-                <p className="text-xs text-slate-400 mt-2 leading-relaxed line-clamp-2">
+                <p className="text-xs text-slate-500 mt-1.5 leading-relaxed line-clamp-2">
                   {w.description}
                 </p>
 
                 {/* Clean Specs Row */}
-                <div className="grid grid-cols-2 gap-2 mt-4 pt-3 border-t border-slate-800/80 text-[11px] text-slate-400 font-medium">
-                  <div className="flex items-center gap-1">
-                    <Crosshair className="w-3 h-3 text-slate-400" />
-                    <span>Radius:</span>
-                    <span className="text-slate-200 font-bold ml-auto">{w.radius}px</span>
+                <div className="grid grid-cols-2 gap-2 mt-3 pt-2.5 border-t border-slate-200 text-[11px] text-slate-500">
+                  <div>
+                    <span>Radius: </span>
+                    <span className="text-slate-800 font-semibold">{w.radius}px</span>
                   </div>
-                  <div className="flex items-center gap-1">
-                    <Zap className="w-3 h-3 text-cyan-400" />
-                    <span>Cooldown:</span>
-                    <span className="text-slate-200 font-bold ml-auto">{w.cooldown}ms</span>
+                  <div className="text-right">
+                    <span>Cooldown: </span>
+                    <span className="text-slate-800 font-semibold">{w.cooldown}ms</span>
                   </div>
                 </div>
               </button>
@@ -417,13 +413,13 @@ export const WeaponSelectScreen: React.FC<WeaponSelectScreenProps> = ({
         </div>
 
         {/* Difficulty Level Selector */}
-        <div className="mt-5 pt-4 border-t border-slate-800/80">
+        <div className="mt-4 pt-4 border-t border-slate-200">
           <div className="flex items-center justify-between mb-2.5">
             <div className="flex items-center gap-2">
-              <span className="text-xs font-black text-slate-300 uppercase tracking-wider">
+              <span className="text-xs font-semibold text-slate-800 uppercase tracking-wider">
                 Difficulty Level
               </span>
-              <span className="text-[11px] text-slate-500">Pick your pest control intensity</span>
+              <span className="text-[11px] text-slate-500">Choose match intensity</span>
             </div>
           </div>
 
@@ -433,22 +429,23 @@ export const WeaponSelectScreen: React.FC<WeaponSelectScreenProps> = ({
               type="button"
               id="difficulty-select-easy"
               onClick={() => setChosenDifficulty("easy")}
-              className={`p-3 rounded-2xl border text-left transition-all cursor-pointer relative overflow-hidden ${
+              className={`p-3 rounded-xl border text-left transition-all cursor-pointer relative shadow-xs ${
                 chosenDifficulty === "easy"
-                  ? "bg-emerald-950/40 border-emerald-500/80 shadow-lg shadow-emerald-500/10"
-                  : "bg-slate-950/50 border-slate-800 hover:border-slate-700 opacity-80"
+                  ? "bg-emerald-50/80 border-emerald-300 ring-1 ring-emerald-300 text-slate-900"
+                  : "bg-slate-50 border-slate-200 hover:border-slate-300 text-slate-600"
               }`}
             >
               <div className="flex items-center justify-between">
-                <span className="text-xs font-black text-emerald-400 flex items-center gap-1.5 uppercase">
-                  <span>🟢</span> Easy
+                <span className="text-xs font-semibold text-emerald-700 flex items-center gap-1.5 uppercase">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-600" />
+                  Easy
                 </span>
                 {chosenDifficulty === "easy" && (
-                  <span className="w-2 h-2 rounded-full bg-emerald-400" />
+                  <Check className="w-3.5 h-3.5 text-emerald-700" />
                 )}
               </div>
-              <p className="text-[11px] text-slate-300 font-semibold mt-1">Standard 1.0x Speed</p>
-              <p className="text-[10px] text-slate-400 mt-0.5">Classic bugs, gentle pace.</p>
+              <p className="text-xs text-slate-900 font-medium mt-1">Standard 1.0x Speed</p>
+              <p className="text-[11px] text-slate-500 mt-0.5">Classic bugs, relaxed pace.</p>
             </button>
 
             {/* HARD */}
@@ -456,23 +453,24 @@ export const WeaponSelectScreen: React.FC<WeaponSelectScreenProps> = ({
               type="button"
               id="difficulty-select-hard"
               onClick={() => setChosenDifficulty("hard")}
-              className={`p-3 rounded-2xl border text-left transition-all cursor-pointer relative overflow-hidden ${
+              className={`p-3 rounded-xl border text-left transition-all cursor-pointer relative shadow-xs ${
                 chosenDifficulty === "hard"
-                  ? "bg-amber-950/40 border-amber-500/80 shadow-lg shadow-amber-500/10"
-                  : "bg-slate-950/50 border-slate-800 hover:border-slate-700 opacity-80"
+                  ? "bg-amber-50/80 border-amber-300 ring-1 ring-amber-300 text-slate-900"
+                  : "bg-slate-50 border-slate-200 hover:border-slate-300 text-slate-600"
               }`}
             >
               <div className="flex items-center justify-between">
-                <span className="text-xs font-black text-amber-400 flex items-center gap-1.5 uppercase">
-                  <span>⚡</span> Hard
+                <span className="text-xs font-semibold text-amber-700 flex items-center gap-1.5 uppercase">
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-600" />
+                  Hard
                 </span>
                 {chosenDifficulty === "hard" && (
-                  <span className="w-2 h-2 rounded-full bg-amber-400" />
+                  <Check className="w-3.5 h-3.5 text-amber-700" />
                 )}
               </div>
-              <p className="text-[11px] text-slate-300 font-semibold mt-1">+0.75 Speed (1.75x)</p>
-              <p className="text-[10px] text-amber-300/80 mt-0.5">
-                🦋 Save Butterflies! (-1 life if killed)
+              <p className="text-xs text-slate-900 font-medium mt-1">+0.75 Speed (1.75x)</p>
+              <p className="text-[11px] text-amber-700/90 mt-0.5">
+                Save butterflies (-1 life if killed)
               </p>
             </button>
 
@@ -481,38 +479,39 @@ export const WeaponSelectScreen: React.FC<WeaponSelectScreenProps> = ({
               type="button"
               id="difficulty-select-expert"
               onClick={() => setChosenDifficulty("expert")}
-              className={`p-3 rounded-2xl border text-left transition-all cursor-pointer relative overflow-hidden ${
+              className={`p-3 rounded-xl border text-left transition-all cursor-pointer relative shadow-xs ${
                 chosenDifficulty === "expert"
-                  ? "bg-rose-950/40 border-rose-500/80 shadow-lg shadow-rose-500/10"
-                  : "bg-slate-950/50 border-slate-800 hover:border-slate-700 opacity-80"
+                  ? "bg-rose-50/80 border-rose-300 ring-1 ring-rose-300 text-slate-900"
+                  : "bg-slate-50 border-slate-200 hover:border-slate-300 text-slate-600"
               }`}
             >
               <div className="flex items-center justify-between">
-                <span className="text-xs font-black text-rose-400 flex items-center gap-1.5 uppercase">
-                  <span>🔥</span> Expert
+                <span className="text-xs font-semibold text-rose-700 flex items-center gap-1.5 uppercase">
+                  <span className="w-1.5 h-1.5 rounded-full bg-rose-600" />
+                  Expert
                 </span>
                 {chosenDifficulty === "expert" && (
-                  <span className="w-2 h-2 rounded-full bg-rose-400" />
+                  <Check className="w-3.5 h-3.5 text-rose-700" />
                 )}
               </div>
-              <p className="text-[11px] text-slate-300 font-semibold mt-1">2.5x Speed • 2x Bugs</p>
-              <p className="text-[10px] text-rose-300/80 mt-0.5">
-                ⚠️ None must escape! • 🦋 Save Butterflies
+              <p className="text-xs text-slate-900 font-medium mt-1">2.5x Speed • Double Bugs</p>
+              <p className="text-[11px] text-rose-700/90 mt-0.5">
+                Kill all, no escapes, protect butterflies
               </p>
             </button>
           </div>
         </div>
 
         {/* Footer & Start Game Action */}
-        <div className="mt-6 pt-5 border-t border-slate-800/80 flex flex-col sm:flex-row items-center justify-between gap-3">
-          <div className="text-xs text-slate-400 text-center sm:text-left flex items-center gap-2">
+        <div className="mt-5 pt-4 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3">
+          <div className="text-xs text-slate-500 text-center sm:text-left flex items-center gap-2">
             <span>Selected:</span>
-            <span className="text-white font-bold">{WEAPONS[chosenWeapon].name}</span>
-            <span className="text-slate-600">•</span>
-            <span className="capitalize font-bold text-amber-400">{chosenDifficulty}</span>
-            <span className="hidden sm:inline text-slate-600">•</span>
+            <span className="text-slate-900 font-semibold">{WEAPONS[chosenWeapon].name}</span>
+            <span className="text-slate-300">•</span>
+            <span className="capitalize font-semibold text-amber-700">{chosenDifficulty}</span>
+            <span className="hidden sm:inline text-slate-300">•</span>
             <span className="hidden sm:inline text-slate-400">
-              Press <kbd className="px-1.5 py-0.5 rounded bg-slate-800 border border-slate-700 text-slate-300 text-[10px] font-mono">1</kbd> <kbd className="px-1.5 py-0.5 rounded bg-slate-800 border border-slate-700 text-slate-300 text-[10px] font-mono">2</kbd> <kbd className="px-1.5 py-0.5 rounded bg-slate-800 border border-slate-700 text-slate-300 text-[10px] font-mono">3</kbd> or <kbd className="px-1.5 py-0.5 rounded bg-slate-800 border border-slate-700 text-slate-300 text-[10px] font-mono">Enter</kbd>
+              Press <kbd className="px-1 py-0.5 rounded bg-slate-100 border border-slate-200 text-slate-600 text-[10px] font-mono">Enter</kbd> to start
             </span>
           </div>
 
@@ -520,10 +519,10 @@ export const WeaponSelectScreen: React.FC<WeaponSelectScreenProps> = ({
             type="button"
             id="start-match-with-weapon-button"
             onClick={() => onSelectAndStart(chosenWeapon, chosenDifficulty)}
-            className="w-full sm:w-auto px-7 py-3 bg-amber-500 hover:bg-amber-400 active:scale-[0.98] text-slate-950 font-black text-sm tracking-wide rounded-xl shadow-lg shadow-amber-500/20 transition-all flex items-center justify-center gap-2 cursor-pointer"
+            className="w-full sm:w-auto px-6 py-2.5 bg-amber-500 hover:bg-amber-600 active:scale-[0.98] text-white font-semibold text-xs tracking-wide rounded-lg shadow-sm transition-all flex items-center justify-center gap-2 cursor-pointer"
           >
-            <Play className="w-4 h-4 fill-slate-950" />
-            <span>Start Game</span>
+            <Play className="w-3.5 h-3.5 fill-white" />
+            <span>Start Match</span>
           </button>
         </div>
       </div>

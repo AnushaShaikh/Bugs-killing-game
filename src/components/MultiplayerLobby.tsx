@@ -252,27 +252,27 @@ export const MultiplayerLobby: React.FC<MultiplayerLobbyProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/85 backdrop-blur-md select-none overflow-y-auto animate-in fade-in duration-200">
-      <div className="relative w-full max-w-xl bg-slate-900 border-2 border-slate-700/80 rounded-3xl shadow-2xl shadow-indigo-950/60 overflow-hidden flex flex-col my-auto max-h-[92vh]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/40 backdrop-blur-sm select-none overflow-y-auto animate-in fade-in duration-150">
+      <div className="relative w-full max-w-xl bg-white border border-slate-200 rounded-2xl shadow-2xl overflow-hidden flex flex-col my-auto max-h-[92vh]">
         {/* Header Bar */}
-        <div className="p-4 sm:p-5 bg-gradient-to-r from-indigo-700 via-indigo-600 to-indigo-800 text-white flex items-center justify-between">
+        <div className="p-4 sm:p-5 bg-white border-b border-slate-200 text-slate-900 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <button
               onClick={onClose}
-              className="p-1.5 rounded-xl bg-white/10 hover:bg-white/20 transition-colors"
-              title="Back to game mode selection"
+              className="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-900 transition-colors cursor-pointer"
+              title="Back to menu"
             >
-              <ArrowLeft className="w-5 h-5 text-white" />
+              <ArrowLeft className="w-4 h-4" />
             </button>
             <div>
-              <h2 className="text-lg sm:text-xl font-black tracking-tight flex items-center gap-2">
-                <span>Multiplayer Room Arena</span>
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-white/20 text-indigo-100">
-                  Up to 12 Players
+              <h2 className="text-base sm:text-lg font-bold tracking-tight flex items-center gap-2 text-slate-900">
+                <span>Multiplayer Arena</span>
+                <span className="text-[10px] font-medium px-2 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-200">
+                  Up to 12
                 </span>
               </h2>
-              <p className="text-xs text-indigo-200 font-medium">
-                {activeRoom ? `Room Code: ${activeRoom.roomId}` : "Play together with friends on any phone or PC"}
+              <p className="text-xs text-slate-500">
+                {activeRoom ? `Room Code: ${activeRoom.roomId}` : "Compete with friends in real-time"}
               </p>
             </div>
           </div>
@@ -280,27 +280,27 @@ export const MultiplayerLobby: React.FC<MultiplayerLobbyProps> = ({
           <div className="flex items-center gap-2">
             {/* Connection Status Pill */}
             <div
-              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold border transition-colors ${
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-medium border transition-colors ${
                 connectionStatus === "connected"
-                  ? "bg-emerald-500/20 border-emerald-400/40 text-emerald-200"
+                  ? "bg-emerald-50 border-emerald-200 text-emerald-700"
                   : connectionStatus === "connecting"
-                  ? "bg-amber-500/20 border-amber-400/40 text-amber-200 animate-pulse"
-                  : "bg-red-500/20 border-red-400/40 text-red-200"
+                  ? "bg-amber-50 border-amber-200 text-amber-700"
+                  : "bg-rose-50 border-rose-200 text-rose-700"
               }`}
             >
               {connectionStatus === "connected" ? (
                 <>
-                  <span className="w-2 h-2 rounded-full bg-emerald-400" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-600" />
                   <span>Online</span>
                 </>
               ) : connectionStatus === "connecting" ? (
                 <>
-                  <RefreshCw className="w-2.5 h-2.5 animate-spin text-amber-300" />
+                  <RefreshCw className="w-2.5 h-2.5 animate-spin text-amber-600" />
                   <span>Connecting...</span>
                 </>
               ) : (
                 <>
-                  <WifiOff className="w-2.5 h-2.5 text-red-300" />
+                  <WifiOff className="w-2.5 h-2.5 text-rose-600" />
                   <span>Offline</span>
                 </>
               )}
@@ -308,46 +308,45 @@ export const MultiplayerLobby: React.FC<MultiplayerLobbyProps> = ({
 
             <button
               onClick={onClose}
-              className="p-1.5 rounded-full hover:bg-white/20 transition-colors"
+              className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-700 transition-colors cursor-pointer"
             >
-              <X className="w-5 h-5 text-white" />
+              <X className="w-4 h-4" />
             </button>
           </div>
         </div>
 
         {/* Modal Body */}
-        <div className="p-5 sm:p-6 space-y-4 overflow-y-auto">
+        <div className="p-4 sm:p-5 space-y-3.5 overflow-y-auto bg-white">
           {/* Server Error Alert Banner */}
           {errorMessage && (
-            <div className="p-3.5 bg-red-950/70 border-2 border-red-500/60 rounded-2xl flex flex-col gap-2.5 text-red-200 animate-in fade-in slide-in-from-top-2">
+            <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl flex flex-col gap-2 text-rose-800">
               <div className="flex items-start justify-between gap-3">
-                <div className="flex items-start gap-2.5">
-                  <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
+                <div className="flex items-start gap-2">
+                  <AlertCircle className="w-4 h-4 text-rose-600 flex-shrink-0 mt-0.5" />
                   <div>
-                    <div className="text-xs font-black text-white">Connection Notice</div>
-                    <div className="text-xs text-red-200/90 mt-0.5">{errorMessage}</div>
+                    <div className="text-xs font-semibold text-slate-900">Connection Notice</div>
+                    <div className="text-xs text-rose-700 mt-0.5">{errorMessage}</div>
                   </div>
                 </div>
                 {onClearError && (
                   <button
                     onClick={onClearError}
-                    className="p-1 rounded-lg hover:bg-red-800/50 text-red-300 hover:text-white transition-colors"
+                    className="p-1 rounded hover:bg-rose-100 text-rose-600 hover:text-rose-900 transition-colors cursor-pointer"
                   >
-                    <X className="w-4 h-4" />
+                    <X className="w-3.5 h-3.5" />
                   </button>
                 )}
               </div>
-              <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-red-800/50">
+              <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-rose-200">
                 <button
                   type="button"
                   onClick={() => {
                     if (onClearError) onClearError();
                     handleCreateRoom();
                   }}
-                  className="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition-all shadow-sm flex items-center gap-1.5 cursor-pointer"
+                  className="px-2.5 py-1 rounded-md bg-amber-500 hover:bg-amber-600 text-white text-xs font-semibold transition-colors cursor-pointer shadow-xs"
                 >
-                  <Crown className="w-3.5 h-3.5 text-amber-300" />
-                  <span>Host Your Own Room Instead</span>
+                  Host New Room
                 </button>
                 <button
                   type="button"
@@ -355,10 +354,10 @@ export const MultiplayerLobby: React.FC<MultiplayerLobbyProps> = ({
                     if (onClearError) onClearError();
                     loadOpenRooms();
                   }}
-                  className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold transition-all flex items-center gap-1 cursor-pointer"
+                  className="px-2.5 py-1 rounded-md bg-white hover:bg-slate-100 text-slate-700 text-xs font-medium transition-colors flex items-center gap-1 cursor-pointer border border-slate-200 shadow-xs"
                 >
                   <RefreshCw className="w-3 h-3" />
-                  <span>Check Active Rooms</span>
+                  <span>Refresh Rooms</span>
                 </button>
               </div>
             </div>
@@ -366,36 +365,23 @@ export const MultiplayerLobby: React.FC<MultiplayerLobbyProps> = ({
 
           {!activeRoom ? (
             /* Option A: Create or Join a Room */
-            <div className="space-y-4">
-              <div className="text-center py-1">
-                <div className="w-12 h-12 rounded-2xl bg-indigo-500/15 border border-indigo-500/30 flex items-center justify-center text-2xl mx-auto mb-2">
-                  ⚔️
-                </div>
-                <h3 className="text-base sm:text-lg font-black text-white">
-                  Join or Create a Battle Room
-                </h3>
-                <p className="text-xs text-slate-400 max-w-sm mx-auto mt-0.5">
-                  Play with friends across any phone, tablet, or browser. Host selects the weapon for all participants!
-                </p>
-              </div>
-
+            <div className="space-y-3.5">
               {/* Action 1: Create Room */}
-              <div className="p-4 bg-slate-800/80 border border-slate-700 rounded-2xl space-y-3">
+              <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-3 shadow-xs">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-black text-indigo-400 uppercase tracking-wider">
-                    Option 1: Host a Game
+                  <span className="text-xs font-semibold text-slate-800 uppercase tracking-wider">
+                    Host a Match
                   </span>
-                  <span className="text-[10px] text-amber-300 font-bold flex items-center gap-1 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/30">
-                    <Crown className="w-3 h-3 text-amber-400" />
-                    Host selects match weapon
+                  <span className="text-[10px] text-amber-800 font-medium bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
+                    Host chooses rules
                   </span>
                 </div>
 
                 {/* Pre-select Weapon for the Room */}
-                <div className="p-2.5 bg-slate-900/80 border border-slate-700/80 rounded-xl space-y-1.5">
+                <div className="p-3 bg-white border border-slate-200 rounded-lg space-y-2 shadow-xs">
                   <div className="flex items-center justify-between text-xs">
-                    <span className="text-slate-400 font-bold text-[11px]">Match Weapon:</span>
-                    <span className="text-amber-300 font-black text-xs">{WEAPONS[selectedWeapon]?.name}</span>
+                    <span className="text-slate-500 text-[11px]">Default Weapon:</span>
+                    <span className="text-amber-700 font-semibold">{WEAPONS[selectedWeapon]?.name}</span>
                   </div>
                   <div className="grid grid-cols-3 gap-2">
                     {(["shoe", "newspaper", "swatter"] as WeaponType[]).map((wKey) => {
@@ -406,15 +392,15 @@ export const MultiplayerLobby: React.FC<MultiplayerLobbyProps> = ({
                           key={wKey}
                           type="button"
                           onClick={() => onSelectWeapon(wKey)}
-                          className={`p-2 rounded-xl border flex items-center gap-1.5 transition-all cursor-pointer ${
+                          className={`p-2 rounded-lg border flex items-center gap-1.5 transition-all cursor-pointer ${
                             isSelected
-                              ? "bg-amber-500/25 border-amber-400 text-white shadow-sm ring-1 ring-amber-400"
-                              : "bg-slate-950 border-slate-800 text-slate-400 hover:text-white"
+                              ? "bg-amber-50 border-amber-300 ring-1 ring-amber-300 text-slate-900 font-semibold"
+                              : "bg-slate-50 border-slate-200 text-slate-600 hover:text-slate-900"
                           }`}
                         >
-                          <span className="text-lg">{w.icon}</span>
+                          <span className="text-base">{w.icon}</span>
                           <div className="text-left truncate">
-                            <div className="text-xs font-black truncate">{w.name}</div>
+                            <div className="text-xs font-medium truncate">{w.name}</div>
                           </div>
                         </button>
                       );
@@ -426,61 +412,52 @@ export const MultiplayerLobby: React.FC<MultiplayerLobbyProps> = ({
                   onClick={handleCreateRoom}
                   id="create-room-button"
                   disabled={isConnecting}
-                  className="w-full py-3.5 px-4 bg-indigo-600 hover:bg-indigo-500 active:scale-[0.99] text-white rounded-xl font-black text-xs sm:text-sm uppercase tracking-wider transition-all shadow-lg shadow-indigo-600/30 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
+                  className="w-full py-2.5 px-4 bg-amber-500 hover:bg-amber-600 active:scale-[0.98] text-white rounded-lg font-semibold text-xs uppercase tracking-wide transition-colors flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 shadow-xs"
                 >
                   <Users className="w-4 h-4" />
-                  <span>{isConnecting ? "Creating Arena Room..." : "Create Room for Friends (Up to 12)"}</span>
+                  <span>{isConnecting ? "Creating Arena..." : "Create Room (Up to 12 Players)"}</span>
                 </button>
               </div>
 
-              {/* Divider */}
-              <div className="relative flex py-0.5 items-center">
-                <div className="flex-grow border-t border-slate-800"></div>
-                <span className="flex-shrink mx-4 text-[10px] font-bold text-slate-500 uppercase tracking-wider">
-                  OR ENTER CODE
-                </span>
-                <div className="flex-grow border-t border-slate-800"></div>
-              </div>
-
               {/* Action 2: Join Room with Code */}
-              <div className="p-4 bg-slate-800/80 border border-slate-700 rounded-2xl space-y-2.5">
-                <span className="text-xs font-black text-amber-400 uppercase tracking-wider block">
-                  Option 2: Enter Room Code
+              <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-2.5 shadow-xs">
+                <span className="text-xs font-semibold text-slate-800 uppercase tracking-wider block">
+                  Join with Code
                 </span>
                 <div className="flex gap-2">
                   <input
                     type="text"
                     maxLength={8}
-                    placeholder="ENTER 5-LETTER CODE"
+                    placeholder="ENTER CODE"
                     value={joinCode}
                     onChange={(e) => setJoinCode(e.target.value.replace(/[^a-zA-Z0-9]/g, "").toUpperCase())}
                     onKeyDown={(e) => e.key === "Enter" && handleJoinRoomWithCode()}
-                    className="flex-1 px-4 py-3 bg-slate-900 border-2 border-slate-700 rounded-xl text-center font-black tracking-widest text-base text-white uppercase placeholder:tracking-normal placeholder:font-bold placeholder:text-xs placeholder:text-slate-400 focus:outline-none focus:border-indigo-500 transition-all"
+                    className="flex-1 px-3 py-2 bg-white border border-slate-300 rounded-lg text-center font-mono font-semibold tracking-wider text-sm text-slate-900 uppercase placeholder:font-sans placeholder:tracking-normal placeholder:font-normal placeholder:text-xs placeholder:text-slate-400 focus:outline-none focus:border-amber-500 transition-colors shadow-xs"
                   />
                   <button
                     onClick={() => handleJoinRoomWithCode()}
                     id="join-room-button"
                     disabled={isConnecting || !joinCode.trim()}
-                    className="px-5 py-3 bg-amber-500 hover:bg-amber-400 disabled:opacity-50 text-slate-950 rounded-xl font-black text-xs uppercase tracking-wider transition-all flex items-center gap-1.5 shadow-md shadow-amber-500/20 cursor-pointer"
+                    className="px-4 py-2 bg-white hover:bg-slate-100 disabled:opacity-50 text-slate-700 rounded-lg font-semibold text-xs tracking-wide transition-colors flex items-center gap-1.5 border border-slate-200 cursor-pointer shadow-xs"
                   >
-                    <span>Join Room</span>
-                    <ArrowRight className="w-4 h-4" />
+                    <span>Join</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
                   </button>
                 </div>
               </div>
 
               {/* Action 3: Live Active Rooms in Waiting State */}
               {openRooms.length > 0 && (
-                <div className="p-3.5 bg-slate-900/90 border border-emerald-500/30 rounded-2xl space-y-2">
+                <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-xl space-y-2 shadow-xs">
                   <div className="flex items-center justify-between text-xs">
-                    <span className="font-black text-emerald-400 flex items-center gap-1.5">
-                      <Radio className="w-3.5 h-3.5 animate-pulse text-emerald-400" />
-                      Active Waiting Rooms ({openRooms.length})
+                    <span className="font-semibold text-slate-800 flex items-center gap-1.5">
+                      <Radio className="w-3.5 h-3.5 text-emerald-600" />
+                      Active Rooms ({openRooms.length})
                     </span>
                     <button
                       onClick={loadOpenRooms}
                       disabled={isRefreshingRooms}
-                      className="text-[10px] text-slate-400 hover:text-white flex items-center gap-1"
+                      className="text-[11px] text-slate-500 hover:text-slate-800 flex items-center gap-1 cursor-pointer"
                     >
                       <RefreshCw className={`w-3 h-3 ${isRefreshingRooms ? "animate-spin" : ""}`} />
                       Refresh
@@ -493,21 +470,21 @@ export const MultiplayerLobby: React.FC<MultiplayerLobbyProps> = ({
                       return (
                         <div
                           key={room.id}
-                          className="p-2.5 bg-slate-800/80 border border-slate-700 rounded-xl flex items-center justify-between hover:border-indigo-500 transition-colors"
+                          className="p-2.5 bg-white border border-slate-200 rounded-lg flex items-center justify-between hover:border-slate-300 transition-colors shadow-xs"
                         >
                           <div className="flex items-center gap-2">
-                            <span className="text-lg">{weaponInfo.icon}</span>
+                            <span className="text-base">{weaponInfo.icon}</span>
                             <div>
-                              <div className="text-xs font-black text-white flex items-center gap-1.5">
-                                <span className="tracking-wider font-mono text-indigo-300">{room.id}</span>
-                                <span className="text-slate-400 font-normal">by {room.hostName}</span>
+                              <div className="text-xs font-semibold text-slate-900 flex items-center gap-1.5">
+                                <span className="tracking-wider font-mono text-slate-700">{room.id}</span>
+                                <span className="text-slate-500 font-normal">by {room.hostName}</span>
                               </div>
-                              <div className="text-[10px] text-slate-400 flex items-center gap-1.5 mt-0.5">
+                              <div className="text-[10px] text-slate-500 flex items-center gap-1.5 mt-0.5">
                                 <span>{room.playerCount} / {room.maxPlayers} players</span>
                                 <span>•</span>
                                 <span>{weaponInfo.name}</span>
                                 <span>•</span>
-                                <span className="font-bold text-amber-300 capitalize">{room.difficulty || "easy"}</span>
+                                <span className="font-medium text-amber-700 capitalize">{room.difficulty || "easy"}</span>
                               </div>
                             </div>
                           </div>
@@ -515,7 +492,7 @@ export const MultiplayerLobby: React.FC<MultiplayerLobbyProps> = ({
                           <button
                             onClick={() => handleJoinRoomWithCode(room.id)}
                             disabled={isConnecting}
-                            className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-bold transition-all shadow-sm flex items-center gap-1 cursor-pointer"
+                            className="px-2.5 py-1 bg-white hover:bg-slate-50 text-slate-700 rounded text-xs font-medium transition-colors flex items-center gap-1 cursor-pointer border border-slate-200 shadow-xs"
                           >
                             <span>Join</span>
                             <ArrowRight className="w-3 h-3" />
@@ -528,75 +505,75 @@ export const MultiplayerLobby: React.FC<MultiplayerLobbyProps> = ({
               )}
 
               {statusMsg && (
-                <p className="text-center text-xs font-bold text-amber-400 animate-pulse">
+                <p className="text-center text-xs font-medium text-amber-700">
                   {statusMsg}
                 </p>
               )}
             </div>
           ) : (
             /* Option B: Inside an Active Room Lobby (Waiting for match start) */
-            <div className="space-y-4">
+            <div className="space-y-3.5">
               {/* Room Code & Invite Share Card */}
-              <div className="p-4 bg-indigo-950/50 border-2 border-indigo-500/50 rounded-2xl text-center relative">
-                <span className="text-[10px] font-black uppercase tracking-wider text-indigo-300">
+              <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl text-center relative shadow-xs">
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
                   Room Invite Code
                 </span>
-                <div className="text-3xl font-black tracking-widest text-white mt-0.5 font-mono">
+                <div className="text-3xl font-bold tracking-widest text-slate-900 mt-0.5 font-mono">
                   {activeRoom.roomId}
                 </div>
 
                 <div className="mt-3 flex flex-wrap justify-center gap-2">
                   <button
                     onClick={copyRoomCode}
-                    className="px-3 py-1.5 bg-slate-800 hover:bg-slate-750 border border-slate-700 text-slate-200 text-xs font-bold rounded-xl transition-all flex items-center gap-1.5 shadow-sm cursor-pointer"
+                    className="px-3 py-1.5 bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 text-xs font-medium rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer shadow-xs"
                   >
                     {copiedType === "code" ? (
-                      <Check className="w-3.5 h-3.5 text-emerald-400" />
+                      <Check className="w-3.5 h-3.5 text-emerald-600" />
                     ) : (
                       <Copy className="w-3.5 h-3.5" />
                     )}
-                    <span>{copiedType === "code" ? "Code Copied!" : "Copy Code Only"}</span>
+                    <span>{copiedType === "code" ? "Copied" : "Copy Code"}</span>
                   </button>
 
                   <button
                     onClick={copyRoomLink}
-                    className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded-xl transition-all flex items-center gap-1.5 shadow-sm cursor-pointer"
+                    className="px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-white text-xs font-semibold rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer shadow-xs"
                   >
                     {copiedType === "link" ? (
-                      <Check className="w-3.5 h-3.5 text-emerald-300" />
+                      <Check className="w-3.5 h-3.5 text-white" />
                     ) : (
                       <Users className="w-3.5 h-3.5" />
                     )}
-                    <span>{copiedType === "link" ? "Link Copied!" : "Copy Public Invite Link"}</span>
+                    <span>{copiedType === "link" ? "Link Copied" : "Copy Invite Link"}</span>
                   </button>
 
                   <button
                     onClick={handleOpenInNewTab}
-                    className="px-3 py-1.5 bg-slate-800 hover:bg-slate-750 border border-slate-700 text-slate-300 hover:text-white text-xs font-bold rounded-xl transition-all flex items-center gap-1.5 cursor-pointer"
+                    className="px-3 py-1.5 bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 hover:text-slate-900 text-xs font-medium rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer shadow-xs"
                     title="Open this room in a new browser tab to battle"
                   >
                     <ExternalLink className="w-3.5 h-3.5" />
-                    <span>Open in New Tab</span>
+                    <span>Open New Tab</span>
                   </button>
                 </div>
 
-                <p className="text-[10px] text-indigo-200/80 mt-2 bg-indigo-900/40 p-1.5 rounded-lg border border-indigo-700/40">
-                  💡 <strong>Multiplayer Tip:</strong> Click <strong>"Open in New Tab"</strong> to immediately join this arena from a second player window! Both players stay connected to the same live game server.
+                <p className="text-[11px] text-slate-500 mt-2 bg-white p-2 rounded-lg border border-slate-200 shadow-xs">
+                  Tip: Open this room in a new browser tab to test multiplayer directly from two windows.
                 </p>
               </div>
 
-              {/* Room Weapon Section: Host controls it, all players use it! */}
+              {/* Room Weapon Section: Host controls it */}
               {isCurrentPlayerHost ? (
-                <div className="p-3.5 bg-slate-800/90 border-2 border-amber-500/50 rounded-2xl space-y-2">
+                <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-xl space-y-2 shadow-xs">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-1.5">
-                      <Crown className="w-4 h-4 text-amber-400" />
-                      <span className="text-[11px] uppercase font-black text-amber-300 tracking-wider">
-                        Host Weapon Controls
+                      <Crown className="w-3.5 h-3.5 text-amber-600" />
+                      <span className="text-xs uppercase font-semibold text-slate-800 tracking-wider">
+                        Match Weapon
                       </span>
                     </div>
-                    <span className="text-[10px] text-amber-200/90 font-bold bg-amber-500/20 px-2 py-0.5 rounded-full border border-amber-500/30">
-                      Equipped by all players
+                    <span className="text-[10px] text-slate-600 font-medium bg-slate-100 px-2 py-0.5 rounded border border-slate-200">
+                      Applied to all players
                     </span>
                   </div>
                   <div className="grid grid-cols-3 gap-2">
@@ -608,15 +585,15 @@ export const MultiplayerLobby: React.FC<MultiplayerLobbyProps> = ({
                           key={wKey}
                           type="button"
                           onClick={() => handleChangeLobbyWeapon(wKey)}
-                          className={`p-2 rounded-xl border flex items-center gap-1.5 transition-all cursor-pointer ${
+                          className={`p-2 rounded-lg border flex items-center gap-1.5 transition-all cursor-pointer ${
                             isSelected
-                              ? "bg-amber-500/25 border-amber-400 text-white shadow-sm ring-1 ring-amber-400"
-                              : "bg-slate-950 border-slate-850 text-slate-400 hover:text-white"
+                              ? "bg-amber-50 border-amber-300 ring-1 ring-amber-300 text-slate-900 font-semibold shadow-xs"
+                              : "bg-white border-slate-200 text-slate-600 hover:text-slate-900 shadow-xs"
                           }`}
                         >
-                          <span className="text-xl">{w.icon}</span>
+                          <span className="text-lg">{w.icon}</span>
                           <div className="text-left truncate">
-                            <div className="text-xs font-black truncate">{w.name}</div>
+                            <div className="text-xs font-medium truncate">{w.name}</div>
                           </div>
                         </button>
                       );
@@ -624,36 +601,36 @@ export const MultiplayerLobby: React.FC<MultiplayerLobbyProps> = ({
                   </div>
                 </div>
               ) : (
-                <div className="p-3 bg-slate-800/70 border border-slate-700 rounded-2xl flex items-center justify-between">
+                <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between shadow-xs">
                   <div className="flex items-center gap-2">
-                    <span className="text-2xl">{WEAPONS[activeRoom.roomWeapon || "shoe"]?.icon}</span>
+                    <span className="text-xl">{WEAPONS[activeRoom.roomWeapon || "shoe"]?.icon}</span>
                     <div>
-                      <span className="text-[10px] text-slate-400 font-bold uppercase block">
-                        Match Weapon (Set by Host)
+                      <span className="text-[10px] text-slate-400 font-medium uppercase block">
+                        Match Weapon (Host Selected)
                       </span>
-                      <span className="text-xs font-black text-white">
+                      <span className="text-xs font-semibold text-slate-900">
                         {WEAPONS[activeRoom.roomWeapon || "shoe"]?.name}
                       </span>
                     </div>
                   </div>
-                  <span className="text-[10px] font-bold text-amber-300 bg-amber-500/10 px-2.5 py-1 rounded-full border border-amber-500/30">
+                  <span className="text-[10px] font-medium text-amber-800 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
                     Host Decides
                   </span>
                 </div>
               )}
 
-              {/* Room Difficulty Section: Host controls it ("the host decides the level") */}
+              {/* Room Difficulty Section: Host controls it */}
               {isCurrentPlayerHost ? (
-                <div className="p-3.5 bg-slate-800/90 border-2 border-indigo-500/50 rounded-2xl space-y-2">
+                <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-xl space-y-2 shadow-xs">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-1.5">
-                      <Crown className="w-4 h-4 text-amber-400" />
-                      <span className="text-[11px] uppercase font-black text-indigo-300 tracking-wider">
-                        Room Difficulty (Host Decides)
+                      <Crown className="w-3.5 h-3.5 text-amber-600" />
+                      <span className="text-xs uppercase font-semibold text-slate-800 tracking-wider">
+                        Room Difficulty
                       </span>
                     </div>
-                    <span className="text-[10px] text-indigo-200/90 font-bold bg-indigo-500/20 px-2 py-0.5 rounded-full border border-indigo-500/30">
-                      Applied to all players
+                    <span className="text-[10px] text-slate-600 font-medium bg-slate-100 px-2 py-0.5 rounded border border-slate-200">
+                      Host Decides
                     </span>
                   </div>
                   <div className="grid grid-cols-3 gap-2">
@@ -662,22 +639,23 @@ export const MultiplayerLobby: React.FC<MultiplayerLobbyProps> = ({
                       type="button"
                       id="lobby-difficulty-easy"
                       onClick={() => handleChangeDifficulty("easy")}
-                      className={`p-2 rounded-xl border text-left transition-all cursor-pointer ${
+                      className={`p-2.5 rounded-lg border text-left transition-all cursor-pointer ${
                         (activeRoom.difficulty || "easy") === "easy"
-                          ? "bg-emerald-500/25 border-emerald-400 text-white shadow-sm ring-1 ring-emerald-400"
-                          : "bg-slate-950 border-slate-800 text-slate-400 hover:text-white"
+                          ? "bg-emerald-50 border-emerald-300 ring-1 ring-emerald-300 text-slate-900 shadow-xs"
+                          : "bg-white border-slate-200 text-slate-600 hover:text-slate-900 shadow-xs"
                       }`}
                     >
                       <div className="flex items-center justify-between">
-                        <span className="text-xs font-black text-emerald-400 flex items-center gap-1">
-                          <span>🟢</span> Easy
+                        <span className="text-xs font-semibold text-emerald-700 flex items-center gap-1">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-600" />
+                          Easy
                         </span>
                         {(activeRoom.difficulty || "easy") === "easy" && (
-                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                          <Check className="w-3 h-3 text-emerald-700" />
                         )}
                       </div>
-                      <div className="text-[10px] text-slate-300 font-semibold mt-0.5">1.0x Speed</div>
-                      <div className="text-[9px] text-slate-400">Current game rules</div>
+                      <div className="text-[11px] text-slate-800 font-medium mt-1">1.0x Speed</div>
+                      <div className="text-[10px] text-slate-500">Standard bugs</div>
                     </button>
 
                     {/* HARD */}
@@ -685,22 +663,23 @@ export const MultiplayerLobby: React.FC<MultiplayerLobbyProps> = ({
                       type="button"
                       id="lobby-difficulty-hard"
                       onClick={() => handleChangeDifficulty("hard")}
-                      className={`p-2 rounded-xl border text-left transition-all cursor-pointer ${
+                      className={`p-2.5 rounded-lg border text-left transition-all cursor-pointer ${
                         activeRoom.difficulty === "hard"
-                          ? "bg-amber-500/25 border-amber-400 text-white shadow-sm ring-1 ring-amber-400"
-                          : "bg-slate-950 border-slate-800 text-slate-400 hover:text-white"
+                          ? "bg-amber-50 border-amber-300 ring-1 ring-amber-300 text-slate-900 shadow-xs"
+                          : "bg-white border-slate-200 text-slate-600 hover:text-slate-900 shadow-xs"
                       }`}
                     >
                       <div className="flex items-center justify-between">
-                        <span className="text-xs font-black text-amber-400 flex items-center gap-1">
-                          <span>⚡</span> Hard
+                        <span className="text-xs font-semibold text-amber-700 flex items-center gap-1">
+                          <span className="w-1.5 h-1.5 rounded-full bg-amber-600" />
+                          Hard
                         </span>
                         {activeRoom.difficulty === "hard" && (
-                          <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+                          <Check className="w-3 h-3 text-amber-700" />
                         )}
                       </div>
-                      <div className="text-[10px] text-slate-300 font-semibold mt-0.5">+0.75 Speed</div>
-                      <div className="text-[9px] text-amber-300/80">🦋 Save Butterflies</div>
+                      <div className="text-[11px] text-slate-800 font-medium mt-1">+0.75 Speed</div>
+                      <div className="text-[10px] text-amber-700">Save butterflies</div>
                     </button>
 
                     {/* EXPERT */}
@@ -708,52 +687,44 @@ export const MultiplayerLobby: React.FC<MultiplayerLobbyProps> = ({
                       type="button"
                       id="lobby-difficulty-expert"
                       onClick={() => handleChangeDifficulty("expert")}
-                      className={`p-2 rounded-xl border text-left transition-all cursor-pointer ${
+                      className={`p-2.5 rounded-lg border text-left transition-all cursor-pointer ${
                         activeRoom.difficulty === "expert"
-                          ? "bg-rose-500/25 border-rose-400 text-white shadow-sm ring-1 ring-rose-400"
-                          : "bg-slate-950 border-slate-800 text-slate-400 hover:text-white"
+                          ? "bg-rose-50 border-rose-300 ring-1 ring-rose-300 text-slate-900 shadow-xs"
+                          : "bg-white border-slate-200 text-slate-600 hover:text-slate-900 shadow-xs"
                       }`}
                     >
                       <div className="flex items-center justify-between">
-                        <span className="text-xs font-black text-rose-400 flex items-center gap-1">
-                          <span>🔥</span> Expert
+                        <span className="text-xs font-semibold text-rose-700 flex items-center gap-1">
+                          <span className="w-1.5 h-1.5 rounded-full bg-rose-600" />
+                          Expert
                         </span>
                         {activeRoom.difficulty === "expert" && (
-                          <span className="w-1.5 h-1.5 rounded-full bg-rose-400" />
+                          <Check className="w-3 h-3 text-rose-700" />
                         )}
                       </div>
-                      <div className="text-[10px] text-slate-300 font-semibold mt-0.5">2.5x & 2x Bugs</div>
-                      <div className="text-[9px] text-rose-300/80">⚠️ None must escape!</div>
+                      <div className="text-[11px] text-slate-800 font-medium mt-1">2.5x & 2x Bugs</div>
+                      <div className="text-[10px] text-rose-700">Zero escapes</div>
                     </button>
                   </div>
                 </div>
               ) : (
-                <div className="p-3 bg-slate-800/70 border border-slate-700 rounded-2xl flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xl">
-                      {activeRoom.difficulty === "expert"
-                        ? "🔥"
-                        : activeRoom.difficulty === "hard"
-                        ? "⚡"
-                        : "🟢"}
+                <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between shadow-xs">
+                  <div>
+                    <span className="text-[10px] text-slate-400 font-medium uppercase block">
+                      Room Difficulty (Host Selected)
                     </span>
-                    <div>
-                      <span className="text-[10px] text-slate-400 font-bold uppercase block">
-                        Room Difficulty (Set by Host)
-                      </span>
-                      <span className="text-xs font-black text-white capitalize">
-                        {activeRoom.difficulty || "easy"} Mode
-                      </span>
-                      <span className="text-[10px] text-slate-400 block">
-                        {activeRoom.difficulty === "expert"
-                          ? "2.5x Speed, 2x Bugs, None can escape, Save Butterflies!"
-                          : activeRoom.difficulty === "hard"
-                          ? "1.75x Speed (+0.75), Protect Butterflies (-1 life if killed)!"
-                          : "Standard 1.0x Speed, Classic rules"}
-                      </span>
-                    </div>
+                    <span className="text-xs font-semibold text-slate-900 capitalize">
+                      {activeRoom.difficulty || "easy"} Mode
+                    </span>
+                    <span className="text-[11px] text-slate-500 block mt-0.5">
+                      {activeRoom.difficulty === "expert"
+                        ? "2.5x Speed, 2x Bugs, None can escape, Protect Butterflies"
+                        : activeRoom.difficulty === "hard"
+                        ? "1.75x Speed, Protect Butterflies (-1 life if killed)"
+                        : "Standard 1.0x Speed, Classic rules"}
+                    </span>
                   </div>
-                  <span className="text-[10px] font-bold text-indigo-300 bg-indigo-500/10 px-2.5 py-1 rounded-full border border-indigo-500/30">
+                  <span className="text-[10px] font-medium text-slate-600 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">
                     Host Decides
                   </span>
                 </div>
@@ -762,12 +733,12 @@ export const MultiplayerLobby: React.FC<MultiplayerLobbyProps> = ({
               {/* Connected Players in Lobby */}
               <div className="space-y-2">
                 <div className="flex items-center justify-between text-xs">
-                  <span className="font-black text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
-                    <Users className="w-3.5 h-3.5 text-indigo-400" />
+                  <span className="font-semibold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
+                    <Users className="w-3.5 h-3.5 text-slate-500" />
                     <span>Connected Players ({activeRoom.players.length} / 12)</span>
                   </span>
-                  <span className="text-[11px] text-emerald-400 font-bold">
-                    Arena Ready
+                  <span className="text-[11px] text-emerald-600 font-semibold">
+                    Ready
                   </span>
                 </div>
 
@@ -779,36 +750,36 @@ export const MultiplayerLobby: React.FC<MultiplayerLobbyProps> = ({
                     return (
                       <div
                         key={p.id}
-                        className={`p-2.5 rounded-xl border flex items-center justify-between transition-all ${
+                        className={`p-2.5 rounded-lg border flex items-center justify-between transition-colors ${
                           isMe
-                            ? "bg-indigo-950/40 border-indigo-500/60 text-white"
-                            : "bg-slate-800/80 border-slate-700/80 text-slate-300"
+                            ? "bg-amber-50/70 border-amber-200 text-slate-900 shadow-xs"
+                            : "bg-slate-50 border-slate-200 text-slate-700 shadow-xs"
                         }`}
                       >
                         <div className="flex items-center gap-2">
-                          <span className="text-xl">{w.icon}</span>
+                          <span className="text-base">{w.icon}</span>
                           <div>
-                            <div className="text-xs font-black flex items-center gap-1.5">
+                            <div className="text-xs font-semibold flex items-center gap-1.5 text-slate-900">
                               <span className="truncate max-w-[110px]">{p.name}</span>
                               {isMe && (
-                                <span className="text-[9px] font-black px-1.5 py-0.2 rounded bg-indigo-600 text-white">
+                                <span className="text-[9px] font-semibold px-1.5 py-0.2 rounded bg-amber-100 text-amber-800 border border-amber-200">
                                   YOU
                                 </span>
                               )}
                               {p.isHost && (
-                                <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 flex items-center gap-0.5">
-                                  <Crown className="w-2.5 h-2.5" />
+                                <span className="text-[9px] font-medium px-1.5 py-0.2 rounded bg-slate-100 text-slate-700 border border-slate-200 flex items-center gap-0.5">
+                                  <Crown className="w-2.5 h-2.5 text-amber-500" />
                                   HOST
                                 </span>
                               )}
                             </div>
-                            <span className="text-[10px] text-slate-400 font-medium">
+                            <span className="text-[10px] text-slate-500 font-normal">
                               {w.name}
                             </span>
                           </div>
                         </div>
 
-                        <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 ring-2 ring-emerald-500/30" />
+                        <span className="w-2 h-2 rounded-full bg-emerald-500" />
                       </div>
                     );
                   })}
@@ -821,21 +792,21 @@ export const MultiplayerLobby: React.FC<MultiplayerLobbyProps> = ({
                   <button
                     onClick={handleStartMatch}
                     id="start-multiplayer-match-button"
-                    className="w-full py-4 bg-emerald-600 hover:bg-emerald-500 active:scale-[0.99] text-white rounded-2xl font-black text-sm uppercase tracking-wider transition-all shadow-xl shadow-emerald-600/30 flex items-center justify-center gap-2 animate-bounce cursor-pointer"
+                    className="w-full py-3 bg-amber-500 hover:bg-amber-600 active:scale-[0.99] text-white rounded-xl font-semibold text-xs sm:text-sm uppercase tracking-wider transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-xs"
                   >
-                    <Play className="w-5 h-5 fill-current" />
+                    <Play className="w-4 h-4 fill-white" />
                     <span>
-                      Start Battle Royale! ({activeRoom.players.length} {activeRoom.players.length === 1 ? "Player" : "Players"})
+                      Start Match ({activeRoom.players.length} {activeRoom.players.length === 1 ? "Player" : "Players"})
                     </span>
                   </button>
                 ) : (
-                  <div className="p-3.5 bg-indigo-950/40 border border-indigo-500/40 rounded-2xl text-center">
-                    <p className="text-xs font-bold text-indigo-300 animate-pulse flex items-center justify-center gap-1.5">
-                      <span className="w-2 h-2 rounded-full bg-indigo-400 animate-ping" />
-                      Waiting for Room Host to start the battle...
+                  <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl text-center shadow-xs">
+                    <p className="text-xs font-medium text-slate-700 flex items-center justify-center gap-1.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+                      Waiting for host to start the match...
                     </p>
-                    <p className="text-[11px] text-slate-400 mt-1">
-                      Invite more friends with code <strong>{activeRoom.roomId}</strong> (up to 12 players)!
+                    <p className="text-[11px] text-slate-500 mt-0.5">
+                      Room code: <strong className="text-slate-800">{activeRoom.roomId}</strong>
                     </p>
                   </div>
                 )}

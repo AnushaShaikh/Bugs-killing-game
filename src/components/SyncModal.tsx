@@ -87,74 +87,74 @@ export const SyncModal: React.FC<SyncModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="relative w-full max-w-lg bg-white rounded-3xl shadow-2xl border-2 border-slate-200 overflow-hidden flex flex-col max-h-[90vh]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-150 select-none">
+      <div className="relative w-full max-w-lg bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[90vh]">
         {/* Header */}
-        <div className="p-5 bg-gradient-to-r from-sky-500 to-blue-600 text-white flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-white/20 rounded-2xl">
-              <Cloud className="w-6 h-6 text-white" />
+        <div className="p-4 sm:p-5 bg-white border-b border-slate-200 text-slate-900 flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <div className="p-2 bg-slate-100 rounded-lg border border-slate-200">
+              <Cloud className="w-4 h-4 text-slate-700" />
             </div>
             <div>
-              <h2 className="text-xl font-extrabold tracking-tight">Cross-Device Sync</h2>
-              <p className="text-xs text-sky-100 font-medium">
-                Play on Mobile, Tablet & Desktop seamlessly
+              <h2 className="text-base font-bold tracking-tight text-slate-900">Cross-Device Sync</h2>
+              <p className="text-xs text-slate-500 font-normal">
+                Seamless progression across desktop & mobile
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
             id="close-sync-modal"
-            className="p-1.5 rounded-full hover:bg-white/20 transition-colors"
+            className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-700 transition-colors cursor-pointer"
           >
-            <X className="w-5 h-5 text-white" />
+            <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-6">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4">
           {/* Sync Code Box */}
-          <div className="p-4 bg-sky-50/80 border-2 border-sky-200 rounded-2xl text-center space-y-2">
-            <div className="flex items-center justify-center gap-2 text-xs font-bold text-sky-700 uppercase tracking-wider">
-              <ShieldCheck className="w-4 h-4 text-sky-600" />
-              <span>Your Universal Sync Key</span>
+          <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl text-center space-y-2 shadow-xs">
+            <div className="flex items-center justify-center gap-1.5 text-xs font-medium text-slate-500 uppercase tracking-wider">
+              <ShieldCheck className="w-3.5 h-3.5 text-amber-500" />
+              <span>Universal Sync Key</span>
             </div>
-            <div className="text-3xl font-black tracking-widest text-slate-900">
+            <div className="text-2xl font-bold font-mono tracking-widest text-slate-900">
               {profile.syncKey}
             </div>
             <p className="text-[11px] text-slate-500 max-w-xs mx-auto">
-              Enter this key on your phone, tablet, or PC to carry over your high scores, kill counts, and badges.
+              Enter this key on any other device to load high scores and unlocked badges.
             </p>
             <div className="pt-1 flex justify-center gap-2">
               <button
                 onClick={copySyncKey}
                 id="copy-sync-key-button"
-                className="px-4 py-2 bg-white border border-sky-300 hover:bg-sky-100/60 text-sky-800 text-xs font-bold rounded-xl transition-all flex items-center gap-1.5 shadow-sm"
+                className="px-3 py-1.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-medium rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer shadow-xs"
               >
-                {copied ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4 text-sky-600" />}
-                <span>{copied ? "Key Copied!" : "Copy Sync Key"}</span>
+                {copied ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5 text-slate-500" />}
+                <span>{copied ? "Copied" : "Copy Key"}</span>
               </button>
               <button
                 onClick={triggerCloudSync}
                 id="refresh-sync-button"
                 disabled={isSyncing}
-                className="px-3 py-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-600 text-xs font-bold rounded-xl transition-all flex items-center gap-1.5 shadow-sm"
+                className="px-3 py-1.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-medium rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer disabled:opacity-50 shadow-xs"
               >
-                <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? "animate-spin" : ""}`} />
+                <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? "animate-spin text-amber-500" : "text-slate-500"}`} />
                 <span>Sync Now</span>
               </button>
             </div>
             {syncStatus && (
-              <p className="text-[11px] font-bold text-sky-700 pt-1 animate-pulse">
+              <p className="text-[11px] text-amber-700 font-medium pt-0.5">
                 {syncStatus}
               </p>
             )}
           </div>
 
           {/* Import Key on Another Device */}
-          <div className="space-y-2">
-            <span className="text-xs font-bold text-slate-600 uppercase tracking-wider block">
-              Load Progress from Another Device
+          <div className="space-y-1.5">
+            <span className="text-xs font-medium text-slate-500 uppercase tracking-wider block">
+              Load Profile From Another Device
             </span>
             <div className="flex gap-2">
               <input
@@ -162,13 +162,13 @@ export const SyncModal: React.FC<SyncModalProps> = ({
                 placeholder="e.g. WHACK-8492"
                 value={inputKey}
                 onChange={(e) => setInputKey(e.target.value.toUpperCase())}
-                className="flex-1 px-4 py-2.5 bg-slate-50 border-2 border-slate-200 rounded-xl font-mono font-bold text-sm text-slate-800 focus:outline-none focus:border-sky-500 focus:bg-white transition-all uppercase"
+                className="flex-1 px-3 py-2 bg-white border border-slate-300 rounded-lg font-mono font-medium text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-amber-500 uppercase shadow-xs"
               />
               <button
                 onClick={handleImportKey}
                 id="restore-sync-key-button"
                 disabled={isSyncing || !inputKey}
-                className="px-4 py-2.5 bg-slate-900 hover:bg-slate-800 disabled:opacity-50 text-white rounded-xl font-bold text-xs uppercase tracking-wider transition-colors shadow-sm"
+                className="px-4 py-2 bg-amber-500 hover:bg-amber-600 active:scale-[0.98] disabled:opacity-40 text-white rounded-lg font-semibold text-xs tracking-wide transition-colors shadow-xs cursor-pointer"
               >
                 Restore
               </button>
@@ -176,46 +176,46 @@ export const SyncModal: React.FC<SyncModalProps> = ({
           </div>
 
           {/* Device Compatibility Badges */}
-          <div className="p-3 bg-slate-50 border border-slate-200 rounded-2xl flex items-center justify-around text-center">
-            <div className="flex flex-col items-center gap-1 text-slate-600">
-              <Smartphone className="w-5 h-5 text-indigo-500" />
-              <span className="text-[10px] font-bold">iOS & Android</span>
+          <div className="p-2.5 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-around text-center shadow-xs">
+            <div className="flex items-center gap-1.5 text-slate-600 text-xs">
+              <Smartphone className="w-4 h-4 text-slate-500" />
+              <span>Mobile</span>
             </div>
-            <div className="w-px h-8 bg-slate-200" />
-            <div className="flex flex-col items-center gap-1 text-slate-600">
-              <Smartphone className="w-6 h-6 text-emerald-500 rotate-90" />
-              <span className="text-[10px] font-bold">Tablets & iPads</span>
+            <div className="w-px h-4 bg-slate-200" />
+            <div className="flex items-center gap-1.5 text-slate-600 text-xs">
+              <Smartphone className="w-4 h-4 text-slate-500 rotate-90" />
+              <span>Tablet</span>
             </div>
-            <div className="w-px h-8 bg-slate-200" />
-            <div className="flex flex-col items-center gap-1 text-slate-600">
-              <Laptop className="w-5 h-5 text-blue-500" />
-              <span className="text-[10px] font-bold">Laptops & PCs</span>
+            <div className="w-px h-4 bg-slate-200" />
+            <div className="flex items-center gap-1.5 text-slate-600 text-xs">
+              <Laptop className="w-4 h-4 text-slate-500" />
+              <span>Desktop</span>
             </div>
           </div>
 
           {/* Exterminator Badges */}
-          <div className="space-y-2.5">
-            <span className="text-xs font-bold text-slate-600 uppercase tracking-wider block">
-              Unlocked Exterminator Badges
+          <div className="space-y-2">
+            <span className="text-xs font-medium text-slate-500 uppercase tracking-wider block">
+              Achievements
             </span>
-            <div className="grid grid-cols-1 gap-2">
+            <div className="grid grid-cols-1 gap-1.5">
               {BADGES.map((b) => {
                 const isUnlocked = profile.unlockedBadges.includes(b.id) || profile.totalKills >= 10;
                 return (
                   <div
                     key={b.id}
-                    className={`p-2.5 rounded-xl border flex items-center gap-3 transition-all ${
+                    className={`p-2.5 rounded-xl border flex items-center gap-3 transition-colors ${
                       isUnlocked
-                        ? "bg-amber-50/70 border-amber-200 text-slate-800"
-                        : "bg-slate-50 border-slate-200 opacity-60 text-slate-400"
+                        ? "bg-slate-50 border-slate-200 text-slate-800"
+                        : "bg-slate-50/40 border-slate-200/50 opacity-50 text-slate-400"
                     }`}
                   >
-                    <span className="text-2xl">{b.icon}</span>
+                    <span className="text-xl">{b.icon}</span>
                     <div className="flex-1">
-                      <div className="text-xs font-extrabold flex items-center gap-1.5">
+                      <div className="text-xs font-semibold flex items-center gap-1.5 text-slate-900">
                         <span>{b.name}</span>
                         {isUnlocked && (
-                          <span className="text-[9px] bg-amber-200 text-amber-900 px-1.5 py-0.5 rounded-full font-bold">
+                          <span className="text-[9px] bg-amber-50 text-amber-700 border border-amber-200 px-1 py-0.2 rounded font-mono">
                             UNLOCKED
                           </span>
                         )}
@@ -235,9 +235,9 @@ export const SyncModal: React.FC<SyncModalProps> = ({
         <div className="p-3 bg-slate-50 border-t border-slate-200 text-center">
           <button
             onClick={onClose}
-            className="w-full py-2.5 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-sm transition-colors shadow-sm"
+            className="w-full py-2 rounded-lg bg-white hover:bg-slate-100 text-slate-700 font-medium text-xs transition-colors border border-slate-200 cursor-pointer shadow-xs"
           >
-            Done
+            Close
           </button>
         </div>
       </div>
