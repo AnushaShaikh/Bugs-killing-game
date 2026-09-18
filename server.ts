@@ -67,6 +67,7 @@ interface Room {
   difficulty: "easy" | "hard" | "expert";
   roundTimer?: NodeJS.Timeout;
   emptyCleanupTimer?: NodeJS.Timeout;
+  bugSpawnTimer?: NodeJS.Timeout;
 }
 
 const rooms = new Map<string, Room>();
@@ -231,6 +232,91 @@ async function startServer() {
           p.ws.send(message);
         }
       });
+    };
+
+    const startRoomBugSpawner = (room: Room) => {
+      if (room.bugSpawnTimer) {
+        clearInterval(room.bugSpawnTimer);
+        room.bugSpawnTimer = undefined;
+      }
+
+      const interval = room.difficulty === "expert" ? 480 : room.difficulty === "hard" ? 720 : 920;
+
+      room.bugSpawnTimer = setInterval(() => {
+        if (room.status !== "playing" || room.players.size === 0) {
+          if (room.bugSpawnTimer) clearInterval(room.bugSpawnTimer);
+          room.bugSpawnTimer = undefined;
+          return;
+        }
+
+        const edge = Math.floor(Math.random() * 4);
+        let normX = 0, normY = 0, targetNormX = 0.5, targetNormY = 0.5;
+
+        if (edge === 0) {
+          normX = 0.1 + Math.random() * 0.8;
+          normY = -0.06;
+          targetNormX = 0.1 + Math.random() * 0.8;
+          targetNormY = 0.65 + Math.random() * 0.25;
+        } else if (edge === 1) {
+          normX = 1.06;
+          normY = 0.1 + Math.random() * 0.8;
+          targetNormX = 0.15 + Math.random() * 0.5;
+          targetNormY = 0.1 + Math.random() * 0.8;
+        } else if (edge === 2) {
+          normX = 0.1 + Math.random() * 0.8;
+          normY = 1.06;
+          targetNormX = 0.1 + Math.random() * 0.8;
+          targetNormY = 0.15 + Math.random() * 0.5;
+        } else {
+          normX = -0.06;
+          normY = 0.1 + Math.random() * 0.8;
+          targetNormX = 0.35 + Math.random() * 0.5;
+          targetNormY = 0.1 + Math.random() * 0.8;
+        }
+
+        const speciesList: ("roach" | "fly" | "spider" | "ant" | "beetle" | "golden")[] = ["roach", "roach", "fly", "fly", "spider", "ant"];
+        if (Math.random() < 0.35) speciesList.push("beetle");
+        if (Math.random() < 0.15) speciesList.push("golden");
+        const isButterfly = (room.difficulty === "hard" || room.difficulty === "expert") && Math.random() < 0.24;
+        const species = isButterfly ? "butterfly" : speciesList[Math.floor(Math.random() * speciesList.length)];
+
+        let speed = 140;
+        let points = 180;
+        let hp = 1;
+        let radius = 28;
+        if (species === "butterfly") { speed = 90; points = 0; radius = 30; }
+        else if (species === "roach") { speed = 160; points = 180; radius = 28; }
+        else if (species === "fly") { speed = 145; points = 220; radius = 24; }
+        else if (species === "beetle") { speed = 75; points = 350; hp = 2; radius = 34; }
+        else if (species === "spider") { speed = 115; points = 260; radius = 30; }
+        else if (species === "golden") { speed = 210; points = 850; radius = 32; }
+        else if (species === "ant") { speed = 125; points = 150; radius = 22; }
+
+        const bugData = {
+          id: "b_" + Math.random().toString(36).substring(2, 9),
+          species,
+          normX,
+          normY,
+          targetNormX,
+          targetNormY,
+          speed,
+          hp,
+          maxHp: hp,
+          points,
+          radius,
+          bornAt: Date.now(),
+          isFlying: species === "fly" || species === "butterfly",
+        };
+
+        broadcastToRoom(room.id, "bug_spawned", { bug: bugData });
+      }, interval);
+    };
+
+    const stopRoomBugSpawner = (room: Room) => {
+      if (room.bugSpawnTimer) {
+        clearInterval(room.bugSpawnTimer);
+        room.bugSpawnTimer = undefined;
+      }
     };
 
     const getRoomSummary = (room: Room) => {
@@ -446,6 +532,9 @@ async function startServer() {
             p.eliminatedAt = null;
           });
 
+          // Start server-authoritative bug spawner for synchronous arena combat!
+          startRoomBugSpawner(room);
+
           broadcastToRoom(currentRoomId, "match_started", {
             room: getRoomSummary(room),
           });
@@ -491,6 +580,7 @@ async function startServer() {
                 room.winnerName = survivor.name;
               }
               room.status = "ended";
+              stopRoomBugSpawner(room);
 
               setTimeout(() => {
                 broadcastToRoom(currentRoomId, "match_ended", {
@@ -501,6 +591,7 @@ async function startServer() {
             } else if (room.players.size === 1 && remainingAlive === 0) {
               // Solo practice room died
               room.status = "ended";
+              stopRoomBugSpawner(room);
               broadcastToRoom(currentRoomId, "match_ended", {
                 room: getRoomSummary(room),
                 winner: null,
@@ -532,8 +623,9 @@ async function startServer() {
             playerId,
             playerName: player?.name || "Rival",
             weapon: player?.weapon || "shoe",
-            x: data.x,
-            y: data.y,
+            bugId: data.bugId,
+            normX: typeof data.normX === "number" ? data.normX : (typeof data.x === "number" ? data.x : 0.5),
+            normY: typeof data.normY === "number" ? data.normY : (typeof data.y === "number" ? data.y : 0.5),
             hit: data.hit,
             killed: data.killed,
             points: data.points || 0,
@@ -563,6 +655,7 @@ async function startServer() {
           room.status = "waiting";
           room.winnerId = undefined;
           room.winnerName = undefined;
+          stopRoomBugSpawner(room);
           const hostWeapon = room.roomWeapon || "shoe";
           room.players.forEach((p) => {
             p.weapon = hostWeapon;
@@ -594,6 +687,7 @@ async function startServer() {
           room.players.delete(playerId);
 
           if (room.players.size === 0) {
+            stopRoomBugSpawner(room);
             if (room.roundTimer) clearInterval(room.roundTimer);
             // Provide a 5-minute grace period before cleaning up the empty room
             if (room.emptyCleanupTimer) clearTimeout(room.emptyCleanupTimer);
@@ -623,6 +717,7 @@ async function startServer() {
                   room.winnerName = survivor.name;
                 }
                 room.status = "ended";
+                stopRoomBugSpawner(room);
                 broadcastToRoom(currentRoomId, "match_ended", {
                   room: getRoomSummary(room),
                   winner: survivor ? { id: survivor.id, name: survivor.name } : null,

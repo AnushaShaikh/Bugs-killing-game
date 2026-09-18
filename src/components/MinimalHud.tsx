@@ -1,6 +1,6 @@
 import React from "react";
 import { DifficultyLevel, WeaponType } from "../types";
-import { Volume2, VolumeX, Heart, ArrowLeft, ShieldAlert } from "lucide-react";
+import { Volume2, VolumeX, Heart, ArrowLeft, ShieldAlert, Trophy } from "lucide-react";
 
 interface MinimalHudProps {
   score: number;
@@ -15,6 +15,7 @@ interface MinimalHudProps {
   soundEnabled: boolean;
   onToggleSound: () => void;
   onBackToMenu?: () => void;
+  onOpenLeaderboard?: () => void;
   roomInfo?: {
     roomId: string;
     aliveCount: number;
@@ -36,12 +37,13 @@ export const MinimalHud: React.FC<MinimalHudProps> = ({
   soundEnabled,
   onToggleSound,
   onBackToMenu,
+  onOpenLeaderboard,
   roomInfo,
 }) => {
 
   return (
     <div className="absolute top-0 left-0 right-0 z-30 pointer-events-none pt-2 pb-1 px-2 sm:pt-3 sm:px-4 flex items-center justify-between gap-2 select-none">
-      {/* 1. Top Left: Menu Button */}
+      {/* 1. Top Left: Menu Button & Standings */}
       <div className="pointer-events-auto flex items-center gap-1.5 shrink-0">
         {onBackToMenu && (
           <button
@@ -53,6 +55,19 @@ export const MinimalHud: React.FC<MinimalHudProps> = ({
           >
             <ArrowLeft className="w-3.5 h-3.5 text-slate-600 shrink-0" />
             <span className="hidden sm:inline">Menu</span>
+          </button>
+        )}
+
+        {onOpenLeaderboard && (
+          <button
+            type="button"
+            onClick={onOpenLeaderboard}
+            id="hud-leaderboard-btn"
+            className="bg-white/90 hover:bg-white active:bg-slate-100 border border-slate-200/90 h-8 sm:h-9 px-2 sm:px-2.5 rounded-lg text-slate-700 hover:text-slate-900 shadow-xs flex items-center gap-1.5 transition-colors cursor-pointer text-xs font-medium backdrop-blur-md"
+            title="View Standings / Leaderboard"
+          >
+            <Trophy className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+            <span className="hidden sm:inline">Standings</span>
           </button>
         )}
       </div>

@@ -162,6 +162,22 @@ export interface SpectatorReaction {
   timestamp?: number;
 }
 
+export interface SyncedBugData {
+  id: string;
+  species: BugSpecies;
+  normX: number;
+  normY: number;
+  targetNormX: number;
+  targetNormY: number;
+  speed: number;
+  hp: number;
+  maxHp: number;
+  points: number;
+  radius: number;
+  bornAt: number;
+  isFlying?: boolean;
+}
+
 export interface OpponentAction {
   id: string;
   playerId: string;
@@ -169,10 +185,16 @@ export interface OpponentAction {
   weapon: WeaponType;
   x: number;
   y: number;
+  normX?: number;
+  normY?: number;
+  bugId?: string;
   hit: boolean;
   killed: boolean;
   points: number;
   combo: number;
+  score?: number;
+  kills?: number;
+  lives?: number;
   timestamp: number;
 }
 

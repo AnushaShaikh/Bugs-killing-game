@@ -5,9 +5,11 @@ import {
   GameStats,
   MultiplayerPlayer,
   MultiplayerRoom,
+  OpponentAction,
   PlayModeChoice,
   SpectatorReaction,
   StrikeEffect,
+  SyncedBugData,
   UserProfile,
   WeaponType,
 } from "./types";
@@ -77,6 +79,8 @@ export default function App() {
   const [isSpectating, setIsSpectating] = useState(false);
   const [spectatingTargetId, setSpectatingTargetId] = useState<string | null>(null);
   const [showRoomLeaderboard, setShowRoomLeaderboard] = useState(false);
+  const [incomingRoomBug, setIncomingRoomBug] = useState<SyncedBugData | null>(null);
+  const [incomingOpponentSmash, setIncomingOpponentSmash] = useState<OpponentAction | null>(null);
   const [eliminationNotification, setEliminationNotification] = useState<EliminationNotification | null>(null);
   const [floatingReactions, setFloatingReactions] = useState<SpectatorReaction[]>([]);
   const wsRef = useRef<WebSocket | null>(null);
@@ -326,7 +330,23 @@ export default function App() {
               if (remaining && remaining.length > 0) {
                 setSpectatingTargetId(remaining[0].id);
               }
+            } else if (data.eliminatedPlayerId === spectatingTargetId) {
+              // The player we were watching was just eliminated! Smoothly switch to next survivor
+              const remaining = (data.room?.players as MultiplayerPlayer[])?.filter(
+                (p) => p.status === "alive" && p.id !== data.eliminatedPlayerId && p.id !== myPlayerId
+              );
+              if (remaining && remaining.length > 0) {
+                setSpectatingTargetId(remaining[0].id);
+              }
             }
+          } else if (type === "bug_spawned") {
+            setIncomingRoomBug(data.bug);
+          } else if (type === "opponent_smash") {
+            setIncomingOpponentSmash({
+              ...data,
+              id: Math.random().toString(),
+              timestamp: Date.now(),
+            });
           } else if (type === "player_life_updated") {
             setActiveRoom(data.room);
           } else if (type === "spectator_reaction_received") {
@@ -345,6 +365,8 @@ export default function App() {
             }, 2000);
           } else if (type === "match_ended") {
             setActiveRoom(data.room);
+            setIsSpectating(false);
+            setSpectatingTargetId(null);
             setShowRoomLeaderboard(true);
             playVictoryFanfare();
           } else if (type === "lobby_restarted") {
@@ -354,6 +376,7 @@ export default function App() {
             }
             setShowRoomLeaderboard(false);
             setIsSpectating(false);
+            setSpectatingTargetId(null);
             setShowMultiplayerLobby(true);
             playNotificationPing();
           }
@@ -456,6 +479,9 @@ export default function App() {
     killedAny: boolean;
     strikeX: number;
     strikeY: number;
+    normX?: number;
+    normY?: number;
+    bugId?: string;
   }) => {
     // If spectating, strikes are disabled
     if (isSpectating) return;
@@ -507,6 +533,9 @@ export default function App() {
           type: "smash_action",
           x: hitInfo.strikeX,
           y: hitInfo.strikeY,
+          normX: hitInfo.normX,
+          normY: hitInfo.normY,
+          bugId: hitInfo.bugId,
           hit: true,
           killed: hitInfo.killedAny,
           points: hitInfo.points,
@@ -576,6 +605,20 @@ export default function App() {
         feverActive: false,
       };
     });
+
+    // Broadcast miss swing in room multiplayer
+    if (playMode === "room" && wsRef.current && wsRef.current.readyState === WebSocket.OPEN && activeRoom) {
+      wsRef.current.send(
+        JSON.stringify({
+          type: "smash_action",
+          hit: false,
+          killed: false,
+          points: 0,
+          combo: 0,
+          weapon: selectedWeapon,
+        })
+      );
+    }
   };
 
   // Handle butterfly struck (not allowed to kill, -1 life)
@@ -631,15 +674,21 @@ export default function App() {
   const alivePlayers = activeRoom?.players.filter((p) => p.status === "alive") || [];
   const myEliminationRank = activeRoom?.players.find((p) => p.id === myPlayerId)?.eliminationRank;
   const isHost = activeRoom?.players.find((p) => p.id === myPlayerId)?.isHost ?? false;
+  const spectatingPlayer = activeRoom?.players.find((p) => p.id === spectatingTargetId);
+  const activeCanvasWeapon = isSpectating && spectatingPlayer ? spectatingPlayer.weapon : selectedWeapon;
 
   return (
     <div className="relative w-screen h-screen overflow-hidden bg-slate-100 select-none">
       {/* 1. SEAMLESS HARDWARE-ACCELERATED ARENA CANVAS */}
       <main id="bug-smash-arena" className="absolute inset-0 w-full h-full touch-none">
         <GameArenaCanvas
-          weapon={selectedWeapon}
+          weapon={activeCanvasWeapon}
           isPlaying={playMode !== null && !stats.isGameOver && !showWeaponSelect && !showMultiplayerLobby && !showRoomLeaderboard}
           isSpectating={isSpectating}
+          spectatingTargetId={spectatingTargetId}
+          incomingRoomBug={incomingRoomBug}
+          incomingOpponentSmash={incomingOpponentSmash}
+          isRoomMode={playMode === "room"}
           speedMultiplier={speedMultiplier}
           difficulty={currentDifficulty}
           kills={stats.kills}
@@ -672,6 +721,7 @@ export default function App() {
           onSendCheer={handleSendCheer}
           floatingReactions={floatingReactions}
           myEliminationRank={myEliminationRank}
+          onOpenLeaderboard={() => setShowRoomLeaderboard(true)}
         />
       )}
 
@@ -690,6 +740,7 @@ export default function App() {
           soundEnabled={soundOn}
           onToggleSound={toggleSound}
           onBackToMenu={handleBackToMenu}
+          onOpenLeaderboard={playMode === "room" ? () => setShowRoomLeaderboard(true) : undefined}
           roomInfo={
             activeRoom
               ? {
@@ -762,6 +813,7 @@ export default function App() {
         isHost={isHost}
         onRematch={handleRoomRematch}
         onExitToMenu={handleExitRoomToMenu}
+        onClose={() => setShowRoomLeaderboard(false)}
       />
 
       {/* 10. SOLO GAME OVER MODAL */}

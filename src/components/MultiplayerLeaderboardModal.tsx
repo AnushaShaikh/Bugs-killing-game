@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import { MultiplayerPlayer, MultiplayerRoom } from "../types";
 import { WEAPONS } from "../data/weapons";
-import { Trophy, Crown, Medal, RotateCcw, Home, Share2, Users, Check, Sparkles } from "lucide-react";
+import { Trophy, Crown, Medal, RotateCcw, Home, Share2, Users, Check, Sparkles, X } from "lucide-react";
 import confetti from "canvas-confetti";
 
 interface MultiplayerLeaderboardModalProps {
@@ -11,6 +11,7 @@ interface MultiplayerLeaderboardModalProps {
   isHost: boolean;
   onRematch: () => void;
   onExitToMenu: () => void;
+  onClose?: () => void;
 }
 
 export const MultiplayerLeaderboardModal: React.FC<MultiplayerLeaderboardModalProps> = ({
@@ -20,6 +21,7 @@ export const MultiplayerLeaderboardModal: React.FC<MultiplayerLeaderboardModalPr
   isHost,
   onRematch,
   onExitToMenu,
+  onClose,
 }) => {
   const [copied, setCopied] = React.useState(false);
 
@@ -65,6 +67,18 @@ export const MultiplayerLeaderboardModal: React.FC<MultiplayerLeaderboardModalPr
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/40 backdrop-blur-sm select-none overflow-y-auto animate-in fade-in duration-150">
       <div className="relative w-full max-w-lg bg-white border border-slate-200 rounded-2xl shadow-2xl overflow-hidden flex flex-col my-auto max-h-[92vh]">
+        {/* Top Right Close Button */}
+        {onClose && (
+          <button
+            onClick={onClose}
+            className="absolute top-3 right-3 z-10 p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
+            title="Close Standings"
+            aria-label="Close"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        )}
+
         {/* Header Banner */}
         <div className="relative p-5 bg-white border-b border-slate-200 text-slate-900 text-center">
           <div className="flex flex-col items-center">

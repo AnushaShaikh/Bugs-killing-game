@@ -10,6 +10,7 @@ interface SpectatorOverlayProps {
   onSendCheer: (emoji: string) => void;
   floatingReactions: SpectatorReaction[];
   myEliminationRank?: number;
+  onOpenLeaderboard?: () => void;
 }
 
 export const SpectatorOverlay: React.FC<SpectatorOverlayProps> = ({
@@ -19,6 +20,7 @@ export const SpectatorOverlay: React.FC<SpectatorOverlayProps> = ({
   onSendCheer,
   floatingReactions,
   myEliminationRank,
+  onOpenLeaderboard,
 }) => {
   const currentIndex = alivePlayers.findIndex((p) => p.id === currentSpectatingId);
   const activeTarget = currentIndex >= 0 ? alivePlayers[currentIndex] : alivePlayers[0] || null;
@@ -98,14 +100,27 @@ export const SpectatorOverlay: React.FC<SpectatorOverlayProps> = ({
           <div className="text-xs text-slate-500">Waiting for survivors...</div>
         )}
 
-        {/* Right: Remaining Alive Count */}
-        <div className="text-right">
-          <span className="text-[9px] uppercase font-medium text-slate-400 block">
-            Alive
-          </span>
-          <span className="text-xs font-bold text-emerald-600 font-mono">
-            {alivePlayers.length} left
-          </span>
+        {/* Right: Remaining Alive Count + Standings button */}
+        <div className="flex items-center gap-2">
+          <div className="text-right">
+            <span className="text-[9px] uppercase font-medium text-slate-400 block">
+              Alive
+            </span>
+            <span className="text-xs font-bold text-emerald-600 font-mono">
+              {alivePlayers.length} left
+            </span>
+          </div>
+
+          {onOpenLeaderboard && (
+            <button
+              onClick={onOpenLeaderboard}
+              className="px-2 py-1 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 rounded-lg text-xs font-semibold flex items-center gap-1 transition-colors cursor-pointer shadow-xs"
+              title="View Match Standings"
+            >
+              <Trophy className="w-3.5 h-3.5 text-amber-600" />
+              <span className="hidden sm:inline">Standings</span>
+            </button>
+          )}
         </div>
       </div>
 
