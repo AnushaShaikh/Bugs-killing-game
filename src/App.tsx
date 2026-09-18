@@ -3,13 +3,9 @@ import {
   DifficultyLevel,
   EliminationNotification,
   GameStats,
-  MultiplayerPlayer,
   MultiplayerRoom,
-  OpponentAction,
   PlayModeChoice,
-  SpectatorReaction,
   StrikeEffect,
-  SyncedBugData,
   UserProfile,
   WeaponType,
 } from "./types";
@@ -22,10 +18,9 @@ import { GameArenaCanvas } from "./components/GameArenaCanvas";
 import { GameModeSelectScreen } from "./components/GameModeSelectScreen";
 import { MultiplayerLobby } from "./components/MultiplayerLobby";
 import { EliminationBanner } from "./components/EliminationBanner";
-import { SpectatorOverlay } from "./components/SpectatorOverlay";
+import { EliminatedPlayerScreen } from "./components/EliminatedPlayerScreen";
 import { MultiplayerLeaderboardModal } from "./components/MultiplayerLeaderboardModal";
 import {
-  playCheerSound,
   playComboChime,
   playNotificationPing,
   playPlayerEliminatedSound,
@@ -76,13 +71,8 @@ export default function App() {
   const [showMultiplayerLobby, setShowMultiplayerLobby] = useState(false);
   const [activeRoom, setActiveRoom] = useState<MultiplayerRoom | null>(null);
   const [myPlayerId, setMyPlayerId] = useState<string | null>(null);
-  const [isSpectating, setIsSpectating] = useState(false);
-  const [spectatingTargetId, setSpectatingTargetId] = useState<string | null>(null);
   const [showRoomLeaderboard, setShowRoomLeaderboard] = useState(false);
-  const [incomingRoomBug, setIncomingRoomBug] = useState<SyncedBugData | null>(null);
-  const [incomingOpponentSmash, setIncomingOpponentSmash] = useState<OpponentAction | null>(null);
   const [eliminationNotification, setEliminationNotification] = useState<EliminationNotification | null>(null);
-  const [floatingReactions, setFloatingReactions] = useState<SpectatorReaction[]>([]);
   const wsRef = useRef<WebSocket | null>(null);
   const connectingPromiseRef = useRef<Promise<WebSocket> | null>(null);
   const [multiplayerError, setMultiplayerError] = useState<string | null>(null);
@@ -174,7 +164,6 @@ export default function App() {
     setLives(MAX_LIVES);
     setLatestStrike(null);
     setShowGameOver(false);
-    setIsSpectating(false);
   }, []);
 
   // End of Solo Round handler
@@ -284,11 +273,6 @@ export default function App() {
             if (data.room?.roomWeapon) {
               setSelectedWeapon(data.room.roomWeapon);
             }
-            if (data.joinedAsSpectator) {
-              setIsSpectating(true);
-              setShowMultiplayerLobby(false);
-              startRound();
-            }
           } else if (type === "room_updated" || type === "player_joined" || type === "player_left") {
             setActiveRoom(data.room);
             if (data.room?.roomWeapon) {
@@ -301,8 +285,9 @@ export default function App() {
             }
             setShowMultiplayerLobby(false);
             setShowRoomLeaderboard(false);
-            setIsSpectating(false);
             startRound();
+          } else if (type === "room_scores_updated") {
+            setActiveRoom(data.room);
           } else if (type === "player_eliminated") {
             setActiveRoom(data.room);
             playPlayerEliminatedSound();
@@ -320,53 +305,15 @@ export default function App() {
               setEliminationNotification((current) =>
                 current?.playerId === data.eliminatedPlayerId ? null : current
               );
-            }, 4500);
+            }, 3200);
 
             if (data.eliminatedPlayerId === myPlayerId) {
-              setIsSpectating(true);
-              const remaining = (data.room?.players as MultiplayerPlayer[])?.filter(
-                (p) => p.status === "alive" && p.id !== myPlayerId
-              );
-              if (remaining && remaining.length > 0) {
-                setSpectatingTargetId(remaining[0].id);
-              }
-            } else if (data.eliminatedPlayerId === spectatingTargetId) {
-              // The player we were watching was just eliminated! Smoothly switch to next survivor
-              const remaining = (data.room?.players as MultiplayerPlayer[])?.filter(
-                (p) => p.status === "alive" && p.id !== data.eliminatedPlayerId && p.id !== myPlayerId
-              );
-              if (remaining && remaining.length > 0) {
-                setSpectatingTargetId(remaining[0].id);
-              }
+              setLives(0);
             }
-          } else if (type === "bug_spawned") {
-            setIncomingRoomBug(data.bug);
-          } else if (type === "opponent_smash") {
-            setIncomingOpponentSmash({
-              ...data,
-              id: Math.random().toString(),
-              timestamp: Date.now(),
-            });
           } else if (type === "player_life_updated") {
             setActiveRoom(data.room);
-          } else if (type === "spectator_reaction_received") {
-            playCheerSound();
-            const reaction: SpectatorReaction = {
-              id: data.id || Math.random().toString(),
-              fromName: data.fromName || "Spectator",
-              emoji: data.emoji || "👏",
-              x: 20 + Math.random() * 60,
-              y: 80,
-              timestamp: Date.now(),
-            };
-            setFloatingReactions((prev) => [...prev, reaction]);
-            setTimeout(() => {
-              setFloatingReactions((prev) => prev.filter((r) => r.id !== reaction.id));
-            }, 2000);
           } else if (type === "match_ended") {
             setActiveRoom(data.room);
-            setIsSpectating(false);
-            setSpectatingTargetId(null);
             setShowRoomLeaderboard(true);
             playVictoryFanfare();
           } else if (type === "lobby_restarted") {
@@ -375,8 +322,6 @@ export default function App() {
               setSelectedWeapon(data.room.roomWeapon);
             }
             setShowRoomLeaderboard(false);
-            setIsSpectating(false);
-            setSpectatingTargetId(null);
             setShowMultiplayerLobby(true);
             playNotificationPing();
           }
@@ -430,7 +375,6 @@ export default function App() {
     setShowShare(false);
     setShowMultiplayerLobby(false);
     setShowRoomLeaderboard(false);
-    setIsSpectating(false);
     setActiveRoom(null);
     setMyPlayerId(null);
     setPlayMode(null);
@@ -483,9 +427,6 @@ export default function App() {
     normY?: number;
     bugId?: string;
   }) => {
-    // If spectating, strikes are disabled
-    if (isSpectating) return;
-
     // Show top combat announcer text
     const strike: StrikeEffect = {
       id: Math.random().toString(),
@@ -526,21 +467,14 @@ export default function App() {
       feverActive: newCombo >= 6,
     }));
 
-    // Broadcast strike in room multiplayer
+    // Update score in room multiplayer so all players receive live score sync
     if (playMode === "room" && wsRef.current && wsRef.current.readyState === WebSocket.OPEN && activeRoom) {
       wsRef.current.send(
         JSON.stringify({
-          type: "smash_action",
-          x: hitInfo.strikeX,
-          y: hitInfo.strikeY,
-          normX: hitInfo.normX,
-          normY: hitInfo.normY,
-          bugId: hitInfo.bugId,
-          hit: true,
-          killed: hitInfo.killedAny,
+          type: "update_score",
           points: hitInfo.points,
+          kills: hitInfo.killedAny ? hitInfo.hitCount : 0,
           combo: newCombo,
-          weapon: selectedWeapon,
         })
       );
     }
@@ -548,7 +482,7 @@ export default function App() {
 
   // Central life loss deduction logic
   const deductLife = (reason: "miss" | "butterfly" | "escaped") => {
-    if (stats.isGameOver || showWeaponSelect || isSpectating || playMode === null) return;
+    if (stats.isGameOver || showWeaponSelect || playMode === null) return;
 
     setMissAlert(true);
     setTimeout(() => setMissAlert(false), 350);
@@ -573,7 +507,6 @@ export default function App() {
         }
 
         if (nextLives === 0) {
-          setIsSpectating(true);
           playPlayerEliminatedSound();
         }
       } else {
@@ -590,7 +523,7 @@ export default function App() {
 
   // Handle missed swing
   const handleMiss = () => {
-    if (stats.isGameOver || showWeaponSelect || isSpectating || playMode === null) return;
+    if (stats.isGameOver || showWeaponSelect || playMode === null) return;
 
     deductLife("miss");
 
@@ -605,20 +538,6 @@ export default function App() {
         feverActive: false,
       };
     });
-
-    // Broadcast miss swing in room multiplayer
-    if (playMode === "room" && wsRef.current && wsRef.current.readyState === WebSocket.OPEN && activeRoom) {
-      wsRef.current.send(
-        JSON.stringify({
-          type: "smash_action",
-          hit: false,
-          killed: false,
-          points: 0,
-          combo: 0,
-          weapon: selectedWeapon,
-        })
-      );
-    }
   };
 
   // Handle butterfly struck (not allowed to kill, -1 life)
@@ -631,19 +550,6 @@ export default function App() {
     if (currentDifficulty === "expert") {
       deductLife("escaped");
     }
-  };
-
-  // Spectator cheers
-  const handleSendCheer = (emoji: string) => {
-    if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN || !activeRoom) return;
-    wsRef.current.send(
-      JSON.stringify({
-        type: "spectator_cheer",
-        emoji,
-        targetPlayerId: spectatingTargetId,
-        x: 20 + Math.random() * 60,
-      })
-    );
   };
 
   // Room rematch (Host restarts lobby for all players in room)
@@ -664,31 +570,33 @@ export default function App() {
     }
     setActiveRoom(null);
     setMyPlayerId(null);
-    setIsSpectating(false);
     setShowRoomLeaderboard(false);
     setShowMultiplayerLobby(false);
     setPlayMode(null);
   };
 
-  // Current living players in the room for spectator overlay
+  // Room Player Status Checks
+  const myRoomPlayer = activeRoom?.players.find((p) => p.id === myPlayerId);
+  const isMyPlayerEliminated =
+    playMode === "room" && (lives <= 0 || myRoomPlayer?.status === "out");
+  const myEliminationRank = myRoomPlayer?.eliminationRank;
+  const isHost = myRoomPlayer?.isHost ?? false;
   const alivePlayers = activeRoom?.players.filter((p) => p.status === "alive") || [];
-  const myEliminationRank = activeRoom?.players.find((p) => p.id === myPlayerId)?.eliminationRank;
-  const isHost = activeRoom?.players.find((p) => p.id === myPlayerId)?.isHost ?? false;
-  const spectatingPlayer = activeRoom?.players.find((p) => p.id === spectatingTargetId);
-  const activeCanvasWeapon = isSpectating && spectatingPlayer ? spectatingPlayer.weapon : selectedWeapon;
 
   return (
     <div className="relative w-screen h-screen overflow-hidden bg-slate-100 select-none">
       {/* 1. SEAMLESS HARDWARE-ACCELERATED ARENA CANVAS */}
       <main id="bug-smash-arena" className="absolute inset-0 w-full h-full touch-none">
         <GameArenaCanvas
-          weapon={activeCanvasWeapon}
-          isPlaying={playMode !== null && !stats.isGameOver && !showWeaponSelect && !showMultiplayerLobby && !showRoomLeaderboard}
-          isSpectating={isSpectating}
-          spectatingTargetId={spectatingTargetId}
-          incomingRoomBug={incomingRoomBug}
-          incomingOpponentSmash={incomingOpponentSmash}
-          isRoomMode={playMode === "room"}
+          weapon={selectedWeapon}
+          isPlaying={
+            playMode !== null &&
+            !stats.isGameOver &&
+            !showWeaponSelect &&
+            !showMultiplayerLobby &&
+            !showRoomLeaderboard &&
+            !isMyPlayerEliminated
+          }
           speedMultiplier={speedMultiplier}
           difficulty={currentDifficulty}
           kills={stats.kills}
@@ -699,34 +607,31 @@ export default function App() {
         />
 
         {/* Fever Mode Glow Border */}
-        {stats.feverActive && !isSpectating && (
+        {stats.feverActive && !isMyPlayerEliminated && (
           <div className="absolute inset-0 pointer-events-none border-2 border-amber-400/60 shadow-[inset_0_0_24px_rgba(245,158,11,0.15)] animate-pulse" />
         )}
 
         {/* Miss Red Flash Border */}
-        {missAlert && !isSpectating && (
+        {missAlert && !isMyPlayerEliminated && (
           <div className="absolute inset-0 pointer-events-none border-4 border-rose-500/80 bg-rose-500/10 transition-opacity" />
         )}
       </main>
 
-      {/* 2. REAL-TIME KNOCKOUT BANNER NOTIFICATION ("the player can get notified when any player outs ....") */}
+      {/* 2. REAL-TIME KNOCKOUT POPUP */}
       <EliminationBanner notification={eliminationNotification} />
 
-      {/* 3. SPECTATOR MODE HUD ("the players who are already out can spectate the gameplay of the players remaining in the game") */}
-      {isSpectating && (
-        <SpectatorOverlay
-          alivePlayers={alivePlayers}
-          currentSpectatingId={spectatingTargetId}
-          onSelectSpectatingId={(id) => setSpectatingTargetId(id)}
-          onSendCheer={handleSendCheer}
-          floatingReactions={floatingReactions}
+      {/* 3. ELIMINATED PLAYER SCREEN (Live score is only for those who are eliminated when room has more than 2 players) */}
+      {isMyPlayerEliminated && !showRoomLeaderboard && activeRoom && activeRoom.players.length > 2 && (
+        <EliminatedPlayerScreen
+          room={activeRoom}
+          myPlayerId={myPlayerId}
           myEliminationRank={myEliminationRank}
-          onOpenLeaderboard={() => setShowRoomLeaderboard(true)}
+          onExitToMenu={handleExitRoomToMenu}
         />
       )}
 
-      {/* 4. MINIMALIST FLOATING TOP HUD */}
-      {playMode !== null && !showWeaponSelect && !showMultiplayerLobby && !showRoomLeaderboard && !isSpectating && (
+      {/* 4. MINIMALIST FLOATING TOP HUD (Clean gameplay screen without live score) */}
+      {playMode !== null && !showWeaponSelect && !showMultiplayerLobby && !showRoomLeaderboard && !isMyPlayerEliminated && (
         <MinimalHud
           score={stats.score}
           kills={stats.kills}
@@ -740,14 +645,12 @@ export default function App() {
           soundEnabled={soundOn}
           onToggleSound={toggleSound}
           onBackToMenu={handleBackToMenu}
-          onOpenLeaderboard={playMode === "room" ? () => setShowRoomLeaderboard(true) : undefined}
           roomInfo={
             activeRoom
               ? {
                   roomId: activeRoom.roomId,
                   aliveCount: alivePlayers.length,
                   totalPlayers: activeRoom.players.length,
-                  isSpectating,
                 }
               : null
           }

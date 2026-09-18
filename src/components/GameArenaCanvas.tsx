@@ -12,14 +12,9 @@ import {
 interface GameArenaCanvasProps {
   weapon: WeaponType;
   isPlaying: boolean;
-  isSpectating?: boolean;
   speedMultiplier: number;
   difficulty?: DifficultyLevel;
   kills: number;
-  incomingRoomBug?: SyncedBugData | null;
-  incomingOpponentSmash?: OpponentAction | null;
-  spectatingTargetId?: string | null;
-  isRoomMode?: boolean;
   onHit: (info: {
     points: number;
     isCrit: boolean;
@@ -102,27 +97,12 @@ interface ArmAnimation {
   trail: { x: number; y: number; angle: number; alpha: number }[];
 }
 
-interface RivalStrike {
-  id: string;
-  x: number;
-  y: number;
-  weapon: WeaponType;
-  playerName: string;
-  bornAt: number;
-  color: string;
-}
-
 export const GameArenaCanvas: React.FC<GameArenaCanvasProps> = ({
   weapon,
   isPlaying,
-  isSpectating = false,
   speedMultiplier,
   difficulty = "easy",
   kills,
-  incomingRoomBug,
-  incomingOpponentSmash,
-  spectatingTargetId,
-  isRoomMode = false,
   onHit,
   onMiss,
   onBugEscaped,
@@ -134,11 +114,6 @@ export const GameArenaCanvas: React.FC<GameArenaCanvasProps> = ({
   const bugsRef = useRef<CanvasBug[]>([]);
   const decalsRef = useRef<CanvasDecal[]>([]);
   const particlesRef = useRef<CanvasParticle[]>([]);
-  const rivalStrikesRef = useRef<RivalStrike[]>([]);
-  const isRoomModeRef = useRef(isRoomMode);
-  useEffect(() => {
-    isRoomModeRef.current = isRoomMode;
-  }, [isRoomMode]);
 
   const armRef = useRef<ArmAnimation>({
     active: false,
@@ -218,196 +193,6 @@ export const GameArenaCanvas: React.FC<GameArenaCanvasProps> = ({
     return () => window.removeEventListener("resize", resize);
   }, []);
 
-  // Handle Server-Authoritative Synchronized Room Bugs
-  useEffect(() => {
-    if (!isRoomMode || !incomingRoomBug) return;
-    const { width, height } = dimensionsRef.current;
-    if (width <= 0 || height <= 0) return;
-
-    if (bugsRef.current.some((b) => b.id === incomingRoomBug.id)) return;
-
-    const startX = incomingRoomBug.normX * width;
-    const startY = incomingRoomBug.normY * height;
-    const targetX = incomingRoomBug.targetNormX * width;
-    const targetY = incomingRoomBug.targetNormY * height;
-    const angle = Math.atan2(targetY - startY, targetX - startX);
-
-    const newBug: CanvasBug = {
-      id: incomingRoomBug.id,
-      species: incomingRoomBug.species,
-      x: startX,
-      y: startY,
-      targetX,
-      targetY,
-      speed: incomingRoomBug.speed,
-      angle,
-      hp: incomingRoomBug.hp,
-      maxHp: incomingRoomBug.maxHp,
-      points: incomingRoomBug.points,
-      bornAt: incomingRoomBug.bornAt,
-      isFlying:
-        incomingRoomBug.isFlying ??
-        (incomingRoomBug.species === "fly" || incomingRoomBug.species === "butterfly"),
-      scale:
-        incomingRoomBug.species === "butterfly"
-          ? 1.15
-          : incomingRoomBug.species === "golden"
-          ? 1.15
-          : incomingRoomBug.species === "beetle"
-          ? 1.1
-          : 1,
-      wigglePhase: Math.random() * 10,
-      radius: incomingRoomBug.radius,
-      hasEntered: false,
-    };
-
-    if (bugsRef.current.length < 32) {
-      bugsRef.current.push(newBug);
-    }
-  }, [incomingRoomBug, isRoomMode]);
-
-  // Handle Synchronized Opponent Smash Action & Live Spectate Movement
-  useEffect(() => {
-    if (!incomingOpponentSmash) return;
-    const { width, height } = dimensionsRef.current;
-    if (width <= 0 || height <= 0) return;
-
-    const smashX = (incomingOpponentSmash.normX ?? 0.5) * width;
-    const smashY = (incomingOpponentSmash.normY ?? 0.5) * height;
-    const targetWeapon = incomingOpponentSmash.weapon || "shoe";
-
-    const isSpectatingTarget =
-      isSpectating && spectatingTargetId === incomingOpponentSmash.playerId;
-
-    if (isSpectatingTarget) {
-      // Live Spectator Animation: First-person weapon slams right where spectated player struck!
-      const currX = armRef.current.startX || width * 0.74 - 50;
-      const currY = armRef.current.startY || height - 90;
-      const dx = smashX - currX;
-      const dy = smashY - currY;
-      const dist = Math.hypot(dx, dy) || 1;
-      const windupDist = 42;
-      const windupX = currX - (dx / dist) * windupDist;
-      const windupY = Math.max(100, currY - (dy / dist) * windupDist - 28);
-
-      armRef.current = {
-        active: true,
-        progress: 0,
-        targetX: smashX,
-        targetY: smashY,
-        startX: currX,
-        startY: currY,
-        windupX,
-        windupY,
-        phase: "windup",
-        timer: 0,
-        aimX: smashX,
-        aimY: smashY,
-        squashX: 1,
-        squashY: 1,
-        trail: [],
-      };
-
-      playWeaponSound(targetWeapon);
-      if (targetWeapon === "shoe") {
-        screenShakeRef.current = 10;
-      }
-    } else {
-      // Live Multiplayer Rival Strike Ring: Visual ripple with player tag
-      rivalStrikesRef.current.push({
-        id: Math.random().toString(),
-        x: smashX,
-        y: smashY,
-        weapon: targetWeapon,
-        playerName: incomingOpponentSmash.playerName,
-        bornAt: Date.now(),
-        color: WEAPONS[targetWeapon]?.color || "#f59e0b",
-      });
-    }
-
-    // Bug damage & squash synchronization
-    if (incomingOpponentSmash.hit) {
-      const bugs = bugsRef.current;
-      let targetBugIndex = -1;
-
-      if (incomingOpponentSmash.bugId) {
-        targetBugIndex = bugs.findIndex((b) => b.id === incomingOpponentSmash.bugId);
-      }
-      if (targetBugIndex === -1 && incomingOpponentSmash.killed) {
-        let closestDist = 95;
-        bugs.forEach((b, idx) => {
-          const d = Math.hypot(b.x - smashX, b.y - smashY);
-          if (d < closestDist) {
-            closestDist = d;
-            targetBugIndex = idx;
-          }
-        });
-      }
-
-      if (targetBugIndex >= 0) {
-        const bug = bugs[targetBugIndex];
-        if (incomingOpponentSmash.killed) {
-          playBugSquish();
-          triggerHaptic(30);
-
-          const splatColors: Record<BugSpecies, { wet: string; dry: string }> = {
-            ant: { wet: "#18181b", dry: "#52525b" },
-            roach: { wet: "#78350f", dry: "#a16207" },
-            fly: { wet: "#0284c7", dry: "#64748b" },
-            beetle: { wet: "#065f46", dry: "#334155" },
-            spider: { wet: "#3b0764", dry: "#6b7280" },
-            golden: { wet: "#d97706", dry: "#b45309" },
-            butterfly: { wet: "#0284c7", dry: "#38bdf8" },
-          };
-          const speciesColors = splatColors[bug.species] || { wet: "#15803d", dry: "#475569" };
-
-          const splatPoints: { dx: number; dy: number; r: number }[] = [];
-          for (let d = 0; d < 7; d++) {
-            const angle = Math.random() * Math.PI * 2;
-            const distRadius = (12 + Math.random() * 26) * bug.scale;
-            splatPoints.push({
-              dx: Math.cos(angle) * distRadius,
-              dy: Math.sin(angle) * distRadius,
-              r: (3 + Math.random() * 5) * bug.scale,
-            });
-          }
-
-          decalsRef.current.push({
-            id: Math.random().toString(),
-            x: bug.x,
-            y: bug.y,
-            color: speciesColors.wet,
-            dryColor: speciesColors.dry,
-            size: 58 * bug.scale,
-            rotation: Math.random() * Math.PI * 2,
-            weapon: targetWeapon,
-            bornAt: Date.now(),
-            lifespan: 4500,
-            splatPoints,
-          });
-
-          for (let pIdx = 0; pIdx < 12; pIdx++) {
-            const angle = Math.random() * Math.PI * 2;
-            const spd = 3 + Math.random() * 6;
-            particlesRef.current.push({
-              id: Math.random().toString(),
-              x: bug.x,
-              y: bug.y,
-              vx: Math.cos(angle) * spd,
-              vy: Math.sin(angle) * spd - 2,
-              color: speciesColors.wet,
-              size: 2.5 + Math.random() * 4,
-              life: 25,
-              maxLife: 25,
-            });
-          }
-
-          bugs.splice(targetBugIndex, 1);
-        }
-      }
-    }
-  }, [incomingOpponentSmash, isSpectating, spectatingTargetId]);
-
   // Bug Spawner logic
   const spawnBug = useCallback(() => {
     const { width, height } = dimensionsRef.current;
@@ -415,9 +200,11 @@ export const GameArenaCanvas: React.FC<GameArenaCanvasProps> = ({
 
     const diff = difficultyRef.current;
     const butterflyCount = bugsRef.current.filter((b) => b.species === "butterfly").length;
-    const maxButterflies = diff === "expert" ? 2 : 1;
-    const canSpawnButterfly = (diff === "hard" || diff === "expert") && butterflyCount < maxButterflies;
-    const shouldSpawnButterfly = canSpawnButterfly && (Math.random() < 0.32 || butterflyCount === 0);
+    // In the hard game Level there should be only 3 to 4 butterfly at a time not more than it can be lesser...
+    const isHardOrExpert = diff === "hard" || diff === "expert";
+    const canSpawnButterfly = isHardOrExpert && butterflyCount < 4;
+    const shouldSpawnButterfly =
+      canSpawnButterfly && (butterflyCount < 3 ? Math.random() < 0.45 : Math.random() < 0.22);
 
     const speciesList: BugSpecies[] = ["roach", "roach", "fly", "fly", "spider", "ant"];
     if (Math.random() < 0.35) speciesList.push("beetle");
@@ -551,7 +338,7 @@ export const GameArenaCanvas: React.FC<GameArenaCanvasProps> = ({
       const baseInterval = isExpert ? 420 : 900;
       const minInterval = isExpert ? 200 : 400;
       const spawnInterval = Math.max(baseInterval - Math.min(currentKills * 8, baseInterval * 0.5), minInterval);
-      if (active && !isRoomModeRef.current && now - lastSpawnTimeRef.current > spawnInterval) {
+      if (active && now - lastSpawnTimeRef.current > spawnInterval) {
         lastSpawnTimeRef.current = now;
         spawnBug();
       }
@@ -664,35 +451,6 @@ export const GameArenaCanvas: React.FC<GameArenaCanvasProps> = ({
         }
       }
 
-      // 5.5 Draw Rival / Opponent Strikes
-      const nowMs = Date.now();
-      const rivalStrikes = rivalStrikesRef.current;
-      for (let i = rivalStrikes.length - 1; i >= 0; i--) {
-        const rs = rivalStrikes[i];
-        const age = nowMs - rs.bornAt;
-        if (age > 650) {
-          rivalStrikes.splice(i, 1);
-          continue;
-        }
-        const progress = age / 650;
-        const radius = 18 + progress * 42;
-        const alpha = 1 - progress;
-
-        ctx.save();
-        ctx.strokeStyle = rs.color;
-        ctx.lineWidth = 3 * (1 - progress);
-        ctx.globalAlpha = alpha * 0.85;
-        ctx.beginPath();
-        ctx.arc(rs.x, rs.y, radius, 0, Math.PI * 2);
-        ctx.stroke();
-
-        ctx.font = "bold 11px sans-serif";
-        ctx.fillStyle = rs.color;
-        ctx.textAlign = "center";
-        ctx.fillText(rs.playerName, rs.x, rs.y - radius - 5);
-        ctx.restore();
-      }
-
       // 6. Update & Render First-Person Arm Strike
       updateAndDrawArm(ctx, armRef.current, weapon, width, height, dt);
 
@@ -707,7 +465,7 @@ export const GameArenaCanvas: React.FC<GameArenaCanvasProps> = ({
 
   // SMASH ATTACK LOGIC (Instantaneous, sub-millisecond precision)
   const handlePointerDown = (e: React.PointerEvent<HTMLCanvasElement>) => {
-    if (!isPlaying || isSpectating) return;
+    if (!isPlaying) return;
 
     const now = performance.now();
     const weaponConfig = WEAPONS[weapon];
@@ -933,7 +691,6 @@ export const GameArenaCanvas: React.FC<GameArenaCanvasProps> = ({
   };
 
   const handlePointerMove = (e: React.PointerEvent<HTMLCanvasElement>) => {
-    if (isSpectating) return; // In spectator mode, first-person arm follows the spectated player's strikes
     const canvas = canvasRef.current;
     if (!canvas) return;
     const rect = canvas.getBoundingClientRect();
